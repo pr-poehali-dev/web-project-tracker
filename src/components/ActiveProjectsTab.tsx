@@ -53,7 +53,7 @@ export default function ActiveProjectsTab({
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="space-y-6">
         <NewProjectForm onCreateProject={createNewProject} />
         {projects.map((project) => (
           <ProjectCard
