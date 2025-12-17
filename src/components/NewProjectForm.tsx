@@ -51,15 +51,20 @@ export default function NewProjectForm({ onCreateProject }: NewProjectFormProps)
         className="group hover:shadow-xl transition-all duration-300 border-2 border-dashed border-purple-300 hover:border-purple-500 animate-fade-in overflow-hidden bg-gradient-to-br from-white to-purple-50/30 cursor-pointer"
         onClick={() => setIsExpanded(true)}
       >
-        <CardContent className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 group-hover:from-purple-200 group-hover:to-pink-200 transition-colors">
-              <Icon name="Plus" className="h-8 w-8 text-purple-600" />
+        <div className="h-2 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 group-hover:from-purple-200 group-hover:to-pink-200 transition-colors">
+                <Icon name="Plus" className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg text-purple-600">Добавить проект</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">Нажмите, чтобы создать</p>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-purple-600 mb-1">Добавить новый проект</h3>
-            <p className="text-sm text-muted-foreground">Нажмите, чтобы создать проект</p>
           </div>
-        </CardContent>
+        </CardHeader>
       </Card>
     );
   }
