@@ -19,9 +19,11 @@ export default function Index() {
     newComment,
     isDialogOpen,
     editingProject,
+    isLoading,
     setProjectExpenses,
     setNewComment,
     setIsDialogOpen,
+    createExpense,
     updateExpenseAmount,
     updateProjectStatus,
     calculateEndDate,
@@ -40,6 +42,17 @@ export default function Index() {
     updateClientName,
     deleteClient,
   } = useProjectData();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <Icon name="Loader2" className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
+          <p className="text-lg text-muted-foreground">Загрузка данных...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
@@ -89,7 +102,7 @@ export default function Index() {
               onUpdateProject={updateProjectInCard}
               onDeleteProject={deleteProject}
               onUpdateExpense={updateExpenseAmount}
-              onCreateExpense={(expense) => setProjectExpenses([...projectExpenses, expense])}
+              onCreateExpense={createExpense}
               onAddComment={addCommentToProject}
               onAddFile={addFileToProject}
               onDeleteFile={deleteFile}

@@ -1,0 +1,43 @@
+{
+  "tests": [
+    {
+      "name": "Get all data",
+      "method": "GET",
+      "path": "/?action=get_all",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "projects": "array",
+        "clients": "array",
+        "expenses": "array",
+        "comments": "array",
+        "files": "array",
+        "removedProjects": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Save project",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "save_project",
+        "data": {
+          "id": "test-1",
+          "name": "Тестовый проект",
+          "client": "Тестовый клиент",
+          "startDate": "2024-01-01",
+          "endDate": "2024-12-31",
+          "totalCost": 100000,
+          "status": "contract",
+          "duration": 365,
+          "isRemoved": false
+        }
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

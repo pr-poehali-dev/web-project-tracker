@@ -1,0 +1,8 @@
+CREATE TABLE project_expenses (
+    id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    category TEXT NOT NULL,
+    amount INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

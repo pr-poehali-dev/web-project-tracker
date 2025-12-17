@@ -1,0 +1,8 @@
+CREATE TABLE clients (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    projects_count INTEGER DEFAULT 0,
+    total_revenue INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
