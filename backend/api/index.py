@@ -148,6 +148,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     cur.execute('UPDATE project_files SET url = %s WHERE id = %s', ('', file_id))
                     conn.commit()
                     return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'success': True}), 'isBase64Encoded': False}
+                
+                elif action == 'remove_comment':
+                    comment_id = body_data['commentId']
+                    cur.execute('UPDATE comments SET text = %s WHERE id = %s', ('', comment_id))
+                    conn.commit()
+                    return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'success': True}), 'isBase64Encoded': False}
         
         return {'statusCode': 400, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Invalid request'}), 'isBase64Encoded': False}
     

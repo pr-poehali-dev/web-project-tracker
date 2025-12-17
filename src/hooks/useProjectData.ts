@@ -427,6 +427,31 @@ export function useProjectData() {
     });
   };
 
+  const deleteComment = async (commentId: string) => {
+    const comment = comments.find(c => c.id === commentId);
+    if (!comment) return;
+
+    setComments(comments.filter(c => c.id !== commentId));
+
+    try {
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'remove_comment',
+          commentId: commentId,
+        })
+      });
+    } catch (error) {
+      console.error('Ошибка удаления комментария:', error);
+    }
+
+    toast({
+      title: 'Комментарий удалён',
+      description: 'Комментарий успешно удалён',
+    });
+  };
+
   const addFile = (file: File) => {
     if (!selectedProject) return;
     
@@ -682,6 +707,7 @@ export function useProjectData() {
     updateProjectInCard,
     addComment,
     addCommentToProject,
+    deleteComment,
     addFile,
     addFileToProject,
     deleteFile,

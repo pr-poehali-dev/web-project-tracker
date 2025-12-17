@@ -14,6 +14,7 @@ interface ProjectCardActivityProps {
   onAddComment: (projectId: string, text: string) => void;
   onAddFile: (projectId: string, file: File) => void;
   onDeleteFile: (fileId: string) => void;
+  onDeleteComment: (commentId: string) => void;
 }
 
 export default function ProjectCardActivity({
@@ -23,6 +24,7 @@ export default function ProjectCardActivity({
   onAddComment,
   onAddFile,
   onDeleteFile,
+  onDeleteComment,
 }: ProjectCardActivityProps) {
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -80,6 +82,18 @@ export default function ProjectCardActivity({
                               })}
                             </p>
                           </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 hover:bg-red-200 transition-colors shrink-0"
+                            title="Удалить комментарий"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteComment(item.id);
+                            }}
+                          >
+                            <Icon name="Trash2" className="h-4 w-4 text-red-700" />
+                          </Button>
                         </div>
                       </div>
                     ) : (

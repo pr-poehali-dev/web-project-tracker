@@ -30,6 +30,7 @@ export default function Index() {
     updateProject,
     updateProjectInCard,
     addCommentToProject,
+    deleteComment,
     addFileToProject,
     deleteFile,
     getProjectTotalExpenses,
@@ -106,6 +107,7 @@ export default function Index() {
               onAddComment={addCommentToProject}
               onAddFile={addFileToProject}
               onDeleteFile={deleteFile}
+              onDeleteComment={deleteComment}
               getProjectTotalExpenses={getProjectTotalExpenses}
               getProjectMargin={getProjectMargin}
               getProjectMarginPercent={getProjectMarginPercent}
