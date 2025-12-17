@@ -2,55 +2,76 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Project, Client, Comment, ProjectFile, ProjectExpense, ProjectStatus } from '@/types/project';
 
+const getStoredData = <T,>(key: string, defaultValue: T): T => {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+};
+
 export function useProjectData() {
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: '1',
-      name: 'Редизайн корпоративного сайта',
-      client: 'ООО "ТехноСтрой"',
-      startDate: '2024-01-15',
-      endDate: '2024-03-30',
-      totalCost: 850000,
-      status: 'launch'
-    },
-    {
-      id: '2',
-      name: 'Мобильное приложение',
-      client: 'ИП Иванов',
-      startDate: '2024-02-01',
-      endDate: '2024-05-15',
-      totalCost: 1200000,
-      status: 'advance'
-    }
-  ]);
+  const [projects, setProjects] = useState<Project[]>(() => 
+    getStoredData('projects', [
+      {
+        id: '1',
+        name: 'Редизайн корпоративного сайта',
+        client: 'ООО "ТехноСтрой"',
+        startDate: '2024-01-15',
+        endDate: '2024-03-30',
+        totalCost: 850000,
+        status: 'launch'
+      },
+      {
+        id: '2',
+        name: 'Мобильное приложение',
+        client: 'ИП Иванов',
+        startDate: '2024-02-01',
+        endDate: '2024-05-15',
+        totalCost: 1200000,
+        status: 'advance'
+      }
+    ])
+  );
 
-  const [clients, setClients] = useState<Client[]>([
-    { id: '1', name: 'ООО "ТехноСтрой"', projectsCount: 3, totalRevenue: 2450000 },
-    { id: '2', name: 'ИП Иванов', projectsCount: 1, totalRevenue: 1200000 },
-    { id: '3', name: 'ООО "Инновации+"', projectsCount: 2, totalRevenue: 980000 }
-  ]);
+  const [clients, setClients] = useState<Client[]>(() => 
+    getStoredData('clients', [
+      { id: '1', name: 'ООО "ТехноСтрой"', projectsCount: 3, totalRevenue: 2450000 },
+      { id: '2', name: 'ИП Иванов', projectsCount: 1, totalRevenue: 1200000 },
+      { id: '3', name: 'ООО "Инновации+"', projectsCount: 2, totalRevenue: 980000 }
+    ])
+  );
 
-  const [projectExpenses, setProjectExpenses] = useState<ProjectExpense[]>([
-    { id: '1', projectId: '1', category: 'Стоимость товара', amount: 450000 },
-    { id: '2', projectId: '1', category: 'Комиссия банка за перевод', amount: 18000 },
-    { id: '3', projectId: '1', category: 'Доставка из-за рубежа', amount: 85000 },
-    { id: '4', projectId: '1', category: 'Таможенное оформление', amount: 35000 },
-    { id: '5', projectId: '1', category: 'Пошлины', amount: 67500 },
-    { id: '6', projectId: '2', category: 'Стоимость товара', amount: 780000 },
-    { id: '7', projectId: '2', category: 'Доставка по РФ', amount: 42000 },
-  ]);
+  const [projectExpenses, setProjectExpenses] = useState<ProjectExpense[]>(() => 
+    getStoredData('projectExpenses', [
+      { id: '1', projectId: '1', category: 'Стоимость товара', amount: 450000 },
+      { id: '2', projectId: '1', category: 'Комиссия банка за перевод', amount: 18000 },
+      { id: '3', projectId: '1', category: 'Доставка из-за рубежа', amount: 85000 },
+      { id: '4', projectId: '1', category: 'Таможенное оформление', amount: 35000 },
+      { id: '5', projectId: '1', category: 'Пошлины', amount: 67500 },
+      { id: '6', projectId: '2', category: 'Стоимость товара', amount: 780000 },
+      { id: '7', projectId: '2', category: 'Доставка по РФ', amount: 42000 },
+    ])
+  );
   
-  const [comments, setComments] = useState<Comment[]>([
-    { id: '1', projectId: '1', text: 'Согласован дизайн главной страницы', timestamp: '2024-02-10T10:30:00' },
-    { id: '2', projectId: '1', text: 'Ожидаем утверждение макетов от клиента', timestamp: '2024-02-12T14:15:00' },
-  ]);
+  const [comments, setComments] = useState<Comment[]>(() => 
+    getStoredData('comments', [
+      { id: '1', projectId: '1', text: 'Согласован дизайн главной страницы', timestamp: '2024-02-10T10:30:00' },
+      { id: '2', projectId: '1', text: 'Ожидаем утверждение макетов от клиента', timestamp: '2024-02-12T14:15:00' },
+    ])
+  );
   
-  const [projectFiles, setProjectFiles] = useState<ProjectFile[]>([
-    { id: '1', projectId: '1', name: 'Договор_ТехноСтрой.pdf', size: '2.4 MB', timestamp: '2024-01-20T09:00:00', url: '#' },
-    { id: '2', projectId: '1', name: 'Смета_проект.pdf', size: '1.8 MB', timestamp: '2024-01-22T11:30:00', url: '#' },
-  ]);
+  const [projectFiles, setProjectFiles] = useState<ProjectFile[]>(() => 
+    getStoredData('projectFiles', [
+      { id: '1', projectId: '1', name: 'Договор_ТехноСтрой.pdf', size: '2.4 MB', timestamp: '2024-01-20T09:00:00', url: '#' },
+      { id: '2', projectId: '1', name: 'Смета_проект.pdf', size: '1.8 MB', timestamp: '2024-01-22T11:30:00', url: '#' },
+    ])
+  );
   
-  const [deletedProjects, setDeletedProjects] = useState<Project[]>([]);
+  const [deletedProjects, setDeletedProjects] = useState<Project[]>(() => 
+    getStoredData('deletedProjects', [])
+  );
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [newComment, setNewComment] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -94,6 +115,30 @@ export function useProjectData() {
 
     setClients(updatedClients);
   }, [projects]);
+
+  useEffect(() => {
+    localStorage.setItem('projects', JSON.stringify(projects));
+  }, [projects]);
+
+  useEffect(() => {
+    localStorage.setItem('clients', JSON.stringify(clients));
+  }, [clients]);
+
+  useEffect(() => {
+    localStorage.setItem('projectExpenses', JSON.stringify(projectExpenses));
+  }, [projectExpenses]);
+
+  useEffect(() => {
+    localStorage.setItem('comments', JSON.stringify(comments));
+  }, [comments]);
+
+  useEffect(() => {
+    localStorage.setItem('projectFiles', JSON.stringify(projectFiles));
+  }, [projectFiles]);
+
+  useEffect(() => {
+    localStorage.setItem('deletedProjects', JSON.stringify(deletedProjects));
+  }, [deletedProjects]);
 
   const updateExpenseAmount = (expenseId: string, amount: number) => {
     setProjectExpenses(projectExpenses.map(exp => 
