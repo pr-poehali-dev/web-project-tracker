@@ -35,6 +35,7 @@ export default function Index() {
     deleteProject,
     restoreProject,
     permanentlyDeleteProject,
+    updateClientName,
   } = useProjectData();
 
   return (
@@ -85,7 +86,7 @@ export default function Index() {
           </TabsContent>
 
           <TabsContent value="clients" className="mt-6">
-            <ClientsTab clients={clients} />
+            <ClientsTab clients={clients} onUpdateClientName={updateClientName} />
           </TabsContent>
 
           <TabsContent value="deleted" className="mt-6">

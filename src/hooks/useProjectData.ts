@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Project, Client, Comment, ProjectFile, ProjectExpense, ProjectStatus } from '@/types/project';
 
@@ -24,7 +24,7 @@ export function useProjectData() {
     }
   ]);
 
-  const [clients] = useState<Client[]>([
+  const [clients, setClients] = useState<Client[]>([
     { id: '1', name: 'ООО "ТехноСтрой"', projectsCount: 3, totalRevenue: 2450000 },
     { id: '2', name: 'ИП Иванов', projectsCount: 1, totalRevenue: 1200000 },
     { id: '3', name: 'ООО "Инновации+"', projectsCount: 2, totalRevenue: 980000 }
@@ -61,6 +61,39 @@ export function useProjectData() {
   } | null>(null);
   
   const { toast } = useToast();
+
+  useEffect(() => {
+    const clientMap = new Map<string, { projectsCount: number; totalRevenue: number }>();
+    
+    projects.forEach(project => {
+      const existing = clientMap.get(project.client) || { projectsCount: 0, totalRevenue: 0 };
+      clientMap.set(project.client, {
+        projectsCount: existing.projectsCount + 1,
+        totalRevenue: existing.totalRevenue + project.totalCost,
+      });
+    });
+
+    const updatedClients = clients.map(client => {
+      const stats = clientMap.get(client.name);
+      if (stats) {
+        return { ...client, projectsCount: stats.projectsCount, totalRevenue: stats.totalRevenue };
+      }
+      return { ...client, projectsCount: 0, totalRevenue: 0 };
+    });
+
+    clientMap.forEach((stats, clientName) => {
+      if (!clients.find(c => c.name === clientName)) {
+        updatedClients.push({
+          id: Date.now().toString() + Math.random(),
+          name: clientName,
+          projectsCount: stats.projectsCount,
+          totalRevenue: stats.totalRevenue,
+        });
+      }
+    });
+
+    setClients(updatedClients);
+  }, [projects]);
 
   const updateExpenseAmount = (expenseId: string, amount: number) => {
     setProjectExpenses(projectExpenses.map(exp => 
@@ -297,6 +330,26 @@ export function useProjectData() {
     return project.totalCost > 0 ? ((margin / project.totalCost) * 100).toFixed(1) : '0';
   };
 
+
+
+  const updateClientName = (clientId: string, newName: string) => {
+    const oldClient = clients.find(c => c.id === clientId);
+    if (!oldClient) return;
+
+    setClients(clients.map(c => 
+      c.id === clientId ? { ...c, name: newName } : c
+    ));
+
+    setProjects(projects.map(p => 
+      p.client === oldClient.name ? { ...p, client: newName } : p
+    ));
+
+    toast({
+      title: 'Клиент обновлён',
+      description: 'Название клиента успешно изменено',
+    });
+  };
+
   const createNewProject = (projectData: {
     name: string;
     client: string;
@@ -397,5 +450,6 @@ export function useProjectData() {
     deleteProject,
     restoreProject,
     permanentlyDeleteProject,
+    updateClientName,
   };
 }
