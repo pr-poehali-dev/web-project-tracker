@@ -35,6 +35,7 @@ interface Project {
   client: string;
   startDate: string;
   endDate: string;
+  duration?: number;
   totalCost: number;
   status: 'active' | 'completed' | 'planning';
 }
@@ -103,6 +104,11 @@ export default function Index() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [newComment, setNewComment] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<{
+    name: string;
+    startDate: string;
+    duration: number;
+  } | null>(null);
   
   const { toast } = useToast();
 
@@ -135,6 +141,60 @@ export default function Index() {
   const openProjectDetails = (project: Project) => {
     setSelectedProject(project);
     setIsDialogOpen(true);
+    
+    const start = new Date(project.startDate);
+    const end = new Date(project.endDate);
+    const durationDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    
+    setEditingProject({
+      name: project.name,
+      startDate: project.startDate,
+      duration: project.duration || durationDays,
+    });
+  };
+  
+  const calculateEndDate = (startDate: string, durationDays: number): string => {
+    const start = new Date(startDate);
+    const end = new Date(start);
+    end.setDate(start.getDate() + durationDays);
+    return end.toISOString().split('T')[0];
+  };
+  
+  const updateProject = (field: 'name' | 'startDate' | 'duration', value: string | number) => {
+    if (!selectedProject || !editingProject) return;
+    
+    const updated = { ...editingProject };
+    
+    if (field === 'name') {
+      updated.name = value as string;
+    } else if (field === 'startDate') {
+      updated.startDate = value as string;
+    } else if (field === 'duration') {
+      updated.duration = parseInt(value as string) || 0;
+    }
+    
+    setEditingProject(updated);
+    
+    const endDate = calculateEndDate(updated.startDate, updated.duration);
+    
+    setProjects(projects.map(p => 
+      p.id === selectedProject.id 
+        ? { ...p, name: updated.name, startDate: updated.startDate, endDate, duration: updated.duration }
+        : p
+    ));
+    
+    setSelectedProject({
+      ...selectedProject,
+      name: updated.name,
+      startDate: updated.startDate,
+      endDate,
+      duration: updated.duration,
+    });
+    
+    toast({
+      title: 'Проект обновлён',
+      description: 'Изменения успешно сохранены',
+    });
   };
   
   const addComment = () => {
@@ -594,6 +654,62 @@ export default function Index() {
                     </span>
                   </div>
                 </DialogHeader>
+
+                <div className="p-4 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 space-y-4 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="project-name" className="text-sm font-medium flex items-center">
+                        <Icon name="Edit3" className="mr-1 h-3 w-3" />
+                        Название проекта
+                      </Label>
+                      <Input
+                        id="project-name"
+                        value={editingProject?.name || ''}
+                        onChange={(e) => updateProject('name', e.target.value)}
+                        className="bg-white border-2 focus:border-purple-500"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="start-date" className="text-sm font-medium flex items-center">
+                        <Icon name="Calendar" className="mr-1 h-3 w-3" />
+                        Дата начала
+                      </Label>
+                      <Input
+                        id="start-date"
+                        type="date"
+                        value={editingProject?.startDate || ''}
+                        onChange={(e) => updateProject('startDate', e.target.value)}
+                        className="bg-white border-2 focus:border-purple-500"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="duration" className="text-sm font-medium flex items-center">
+                        <Icon name="Clock" className="mr-1 h-3 w-3" />
+                        Длительность (дней)
+                      </Label>
+                      <Input
+                        id="duration"
+                        type="number"
+                        min="1"
+                        value={editingProject?.duration || ''}
+                        onChange={(e) => updateProject('duration', e.target.value)}
+                        className="bg-white border-2 focus:border-purple-500"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-purple-200">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Icon name="CalendarCheck" className="h-4 w-4 text-green-600" />
+                      <span className="font-medium">Дата окончания:</span>
+                    </div>
+                    <span className="text-sm font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                      {editingProject && new Date(calculateEndDate(editingProject.startDate, editingProject.duration)).toLocaleDateString('ru-RU')}
+                    </span>
+                  </div>
+                </div>
 
                 <Tabs defaultValue="comments" className="flex-1 overflow-hidden flex flex-col">
                   <TabsList className="grid w-full grid-cols-2">
