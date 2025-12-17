@@ -154,6 +154,42 @@ export default function Index() {
       description: 'Изменения успешно сохранены',
     });
   };
+
+  const updateProjectInCard = (projectId: string, field: 'name' | 'startDate' | 'duration', value: string | number) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    const start = new Date(project.startDate);
+    const end = new Date(project.endDate);
+    const currentDuration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+
+    const updated = {
+      name: project.name,
+      startDate: project.startDate,
+      duration: project.duration || currentDuration,
+    };
+
+    if (field === 'name') {
+      updated.name = value as string;
+    } else if (field === 'startDate') {
+      updated.startDate = value as string;
+    } else if (field === 'duration') {
+      updated.duration = parseInt(value as string) || 0;
+    }
+
+    const endDate = calculateEndDate(updated.startDate, updated.duration);
+
+    setProjects(projects.map(p => 
+      p.id === projectId
+        ? { ...p, name: updated.name, startDate: updated.startDate, endDate, duration: updated.duration }
+        : p
+    ));
+
+    toast({
+      title: 'Проект обновлён',
+      description: 'Изменения успешно сохранены',
+    });
+  };
   
   const addComment = () => {
     if (newComment.trim() && selectedProject) {
@@ -310,8 +346,8 @@ export default function Index() {
                   projectExpenses={projectExpenses}
                   comments={comments}
                   projectFiles={projectFiles}
-                  onOpenDetails={openProjectDetails}
                   onUpdateStatus={updateProjectStatus}
+                  onUpdateProject={updateProjectInCard}
                   onUpdateExpense={updateExpenseAmount}
                   onCreateExpense={(expense) => setProjectExpenses([...projectExpenses, expense])}
                   onAddComment={addCommentToProject}

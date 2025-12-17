@@ -16,8 +16,8 @@ interface ProjectCardProps {
   projectExpenses: ProjectExpense[];
   comments: Comment[];
   projectFiles: ProjectFile[];
-  onOpenDetails: (project: Project) => void;
   onUpdateStatus: (projectId: string, status: ProjectStatus) => void;
+  onUpdateProject: (projectId: string, field: 'name' | 'startDate' | 'duration', value: string | number) => void;
   onUpdateExpense: (expenseId: string, amount: number) => void;
   onCreateExpense: (expense: ProjectExpense) => void;
   onAddComment: (projectId: string, text: string) => void;
@@ -32,8 +32,8 @@ export default function ProjectCard({
   projectExpenses,
   comments,
   projectFiles,
-  onOpenDetails, 
   onUpdateStatus,
+  onUpdateProject,
   onUpdateExpense,
   onCreateExpense,
   onAddComment,
@@ -45,6 +45,8 @@ export default function ProjectCard({
   const [isExpensesOpen, setIsExpensesOpen] = useState(false);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [newComment, setNewComment] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(project.name);
   
   const statusInfo = PROJECT_STATUSES[project.status];
   const totalExpenses = getProjectTotalExpenses(project.id);
@@ -62,9 +64,44 @@ export default function ProjectCard({
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-xl mb-2 group-hover:text-purple-600 transition-colors truncate">
-              {project.name}
-            </CardTitle>
+            {isEditingName ? (
+              <div className="flex items-center gap-2 mb-2">
+                <Input
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onBlur={() => {
+                    if (editedName.trim() && editedName !== project.name) {
+                      onUpdateProject(project.id, 'name', editedName.trim());
+                    }
+                    setIsEditingName(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (editedName.trim() && editedName !== project.name) {
+                        onUpdateProject(project.id, 'name', editedName.trim());
+                      }
+                      setIsEditingName(false);
+                    } else if (e.key === 'Escape') {
+                      setEditedName(project.name);
+                      setIsEditingName(false);
+                    }
+                  }}
+                  className="text-xl font-semibold"
+                  autoFocus
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+            ) : (
+              <CardTitle 
+                className="text-xl mb-2 group-hover:text-purple-600 transition-colors truncate cursor-pointer hover:bg-purple-50 rounded px-2 py-1 -mx-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditingName(true);
+                }}
+              >
+                {project.name}
+              </CardTitle>
+            )}
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               <Icon name="Building2" className="h-4 w-4" />
               {project.client}
@@ -76,21 +113,39 @@ export default function ProjectCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-2 gap-3 text-sm" onClick={(e) => e.stopPropagation()}>
           <div className="space-y-1">
-            <p className="text-muted-foreground flex items-center gap-1">
+            <Label className="text-xs text-muted-foreground flex items-center gap-1">
               <Icon name="Calendar" className="h-3 w-3" />
-              Начало
-            </p>
-            <p className="font-medium">{new Date(project.startDate).toLocaleDateString('ru-RU')}</p>
+              Дата начала
+            </Label>
+            <Input
+              type="date"
+              value={project.startDate}
+              onChange={(e) => onUpdateProject(project.id, 'startDate', e.target.value)}
+              className="h-8 text-sm"
+            />
           </div>
           <div className="space-y-1">
-            <p className="text-muted-foreground flex items-center gap-1">
-              <Icon name="CalendarCheck" className="h-3 w-3" />
-              Окончание
-            </p>
-            <p className="font-medium">{new Date(project.endDate).toLocaleDateString('ru-RU')}</p>
+            <Label className="text-xs text-muted-foreground flex items-center gap-1">
+              <Icon name="Clock" className="h-3 w-3" />
+              Длительность (дней)
+            </Label>
+            <Input
+              type="number"
+              min="1"
+              value={project.duration || 0}
+              onChange={(e) => onUpdateProject(project.id, 'duration', parseInt(e.target.value) || 0)}
+              className="h-8 text-sm"
+            />
           </div>
+        </div>
+        <div className="text-sm p-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+          <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+            <Icon name="CalendarCheck" className="h-3 w-3" />
+            Дата окончания
+          </p>
+          <p className="font-medium text-green-700">{new Date(project.endDate).toLocaleDateString('ru-RU')}</p>
         </div>
 
         <div className="space-y-2">
@@ -341,17 +396,6 @@ export default function ProjectCard({
             </SelectContent>
           </Select>
         </div>
-
-        <Button 
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenDetails(project);
-          }}
-        >
-          <Icon name="Info" className="mr-2 h-4 w-4" />
-          Подробнее
-        </Button>
       </CardContent>
     </Card>
   );
