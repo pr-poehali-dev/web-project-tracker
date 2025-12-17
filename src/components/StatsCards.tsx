@@ -11,13 +11,14 @@ interface StatsCardsProps {
 export default function StatsCards({ projects, clients, projectExpenses }: StatsCardsProps) {
   const totalRevenue = projects.reduce((sum, p) => sum + p.totalCost, 0);
   const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'cancelled').length;
+  const completedProjects = projects.filter(p => p.status === 'completed').length;
   
   const totalExpensesSum = projectExpenses.reduce((sum, exp) => sum + exp.amount, 0);
   const totalMargin = totalRevenue - totalExpensesSum;
   const totalMarginPercent = totalRevenue > 0 ? ((totalMargin / totalRevenue) * 100).toFixed(1) : '0';
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
       <Card className="border-2 hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-50 to-green-100">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
           <CardTitle className="text-xs font-medium text-muted-foreground">Общий доход</CardTitle>
@@ -82,6 +83,19 @@ export default function StatsCards({ projects, clients, projectExpenses }: Stats
         <CardContent>
           <div className="text-2xl font-bold text-purple-700">{clients.length}</div>
           <p className="text-xs text-muted-foreground mt-1">Активных клиентов</p>
+        </CardContent>
+      </Card>
+
+      <Card className="border-2 hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-amber-50 to-amber-100">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+          <CardTitle className="text-xs font-medium text-muted-foreground">Завершенные проекты</CardTitle>
+          <div className="h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center">
+            <Icon name="CheckCircle" className="h-4 w-4 text-white" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-amber-700">{completedProjects}</div>
+          <p className="text-xs text-muted-foreground mt-1">Завершено</p>
         </CardContent>
       </Card>
     </div>
