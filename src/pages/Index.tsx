@@ -320,7 +320,7 @@ export default function Index() {
       startDate: projectData.startDate,
       endDate: calculateEndDate(projectData.startDate, projectData.duration),
       totalCost: projectData.totalCost,
-      status: 'plan',
+      status: 'contract',
       duration: projectData.duration,
     };
 
