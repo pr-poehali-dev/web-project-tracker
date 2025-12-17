@@ -23,6 +23,7 @@ interface ProjectDialogProps {
   updateProject: (field: 'name' | 'startDate' | 'duration', value: string | number) => void;
   calculateEndDate: (startDate: string, durationDays: number) => string;
   addComment: () => void;
+  addFile: (file: File) => void;
   updateExpenseAmount: (expenseId: string, amount: number) => void;
   getProjectTotalExpenses: (projectId: string) => number;
   getProjectMargin: (projectId: string) => number;
@@ -43,6 +44,7 @@ export default function ProjectDialog({
   updateProject,
   calculateEndDate,
   addComment,
+  addFile,
   updateExpenseAmount,
   getProjectTotalExpenses,
   getProjectMargin,
@@ -303,31 +305,53 @@ export default function ProjectDialog({
                 </div>
               </ScrollArea>
 
-              <div className="space-y-2 pt-4 border-t">
-                <Label htmlFor="new-comment">Добавить комментарий</Label>
-                <div className="flex gap-2">
-                  <Textarea
-                    id="new-comment"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Введите ваш комментарий..."
-                    className="resize-none"
-                    rows={3}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                        addComment();
-                      }
-                    }}
-                  />
+              <div className="space-y-3 pt-4 border-t">
+                <div className="space-y-2">
+                  <Label htmlFor="new-comment">Добавить комментарий</Label>
+                  <div className="flex gap-2">
+                    <Textarea
+                      id="new-comment"
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Введите ваш комментарий..."
+                      className="resize-none"
+                      rows={3}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                          addComment();
+                        }
+                      }}
+                    />
+                  </div>
+                  <Button 
+                    onClick={addComment}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    disabled={!newComment.trim()}
+                  >
+                    <Icon name="Send" className="mr-2 h-4 w-4" />
+                    Добавить комментарий
+                  </Button>
                 </div>
-                <Button 
-                  onClick={addComment}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                  disabled={!newComment.trim()}
-                >
-                  <Icon name="Send" className="mr-2 h-4 w-4" />
-                  Добавить комментарий
-                </Button>
+
+                <div className="space-y-2">
+                  <Label htmlFor="file-upload">Загрузить PDF файл</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="file-upload"
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          addFile(file);
+                          e.target.value = '';
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Поддерживаются только PDF файлы</p>
+                </div>
               </div>
             </TabsContent>
           </Tabs>

@@ -172,6 +172,37 @@ export default function Index() {
     }
   };
 
+  const addFile = (file: File) => {
+    if (!selectedProject) return;
+    
+    if (file.type !== 'application/pdf') {
+      toast({
+        title: 'Ошибка',
+        description: 'Можно загружать только PDF файлы',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+    
+    const newFile: ProjectFile = {
+      id: Date.now().toString(),
+      projectId: selectedProject.id,
+      name: file.name,
+      size: `${fileSizeMB} MB`,
+      timestamp: new Date().toISOString(),
+      url: URL.createObjectURL(file),
+    };
+    
+    setProjectFiles([...projectFiles, newFile]);
+    
+    toast({
+      title: 'Файл загружен',
+      description: `${file.name} успешно добавлен к проекту`,
+    });
+  };
+
   const getProjectTotalExpenses = (projectId: string): number => {
     return projectExpenses
       .filter(exp => exp.projectId === projectId)
@@ -296,6 +327,7 @@ export default function Index() {
         updateProject={updateProject}
         calculateEndDate={calculateEndDate}
         addComment={addComment}
+        addFile={addFile}
         updateExpenseAmount={updateExpenseAmount}
         getProjectTotalExpenses={getProjectTotalExpenses}
         getProjectMargin={getProjectMargin}
