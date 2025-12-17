@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Comment {
   id: string;
@@ -29,6 +30,17 @@ interface ProjectFile {
   url: string;
 }
 
+type ProjectStatus = 
+  | 'contract' 
+  | 'advance' 
+  | 'order' 
+  | 'shipment' 
+  | 'launch' 
+  | 'closing' 
+  | 'final_payment' 
+  | 'completed' 
+  | 'cancelled';
+
 interface Project {
   id: string;
   name: string;
@@ -37,7 +49,7 @@ interface Project {
   endDate: string;
   duration?: number;
   totalCost: number;
-  status: 'active' | 'completed' | 'planning';
+  status: ProjectStatus;
 }
 
 interface Client {
@@ -53,6 +65,18 @@ interface Expense {
   amount: number;
 }
 
+const PROJECT_STATUSES: Record<ProjectStatus, { label: string; color: string; icon: string; progress: number }> = {
+  contract: { label: 'Договор', color: 'bg-blue-500', icon: 'FileText', progress: 10 },
+  advance: { label: 'Аванс', color: 'bg-yellow-500', icon: 'DollarSign', progress: 20 },
+  order: { label: 'Заказ', color: 'bg-amber-500', icon: 'ShoppingCart', progress: 30 },
+  shipment: { label: 'Отгрузка', color: 'bg-orange-500', icon: 'Truck', progress: 50 },
+  launch: { label: 'Запуск', color: 'bg-cyan-500', icon: 'Rocket', progress: 65 },
+  closing: { label: 'Закрывающие', color: 'bg-purple-500', icon: 'FileCheck', progress: 80 },
+  final_payment: { label: 'Финальная оплата', color: 'bg-indigo-500', icon: 'Banknote', progress: 90 },
+  completed: { label: 'Завершено', color: 'bg-green-500', icon: 'CheckCircle2', progress: 100 },
+  cancelled: { label: 'Отменено', color: 'bg-red-500', icon: 'XCircle', progress: 0 },
+};
+
 export default function Index() {
   const [projects, setProjects] = useState<Project[]>([
     {
@@ -62,7 +86,7 @@ export default function Index() {
       startDate: '2024-01-15',
       endDate: '2024-03-30',
       totalCost: 850000,
-      status: 'active'
+      status: 'launch'
     },
     {
       id: '2',
@@ -71,7 +95,7 @@ export default function Index() {
       startDate: '2024-02-01',
       endDate: '2024-05-15',
       totalCost: 1200000,
-      status: 'active'
+      status: 'advance'
     }
   ]);
 
@@ -136,7 +160,22 @@ export default function Index() {
   };
 
   const totalRevenue = projects.reduce((sum, p) => sum + p.totalCost, 0);
-  const activeProjects = projects.filter(p => p.status === 'active').length;
+  const activeProjects = projects.filter(p => p.status !== 'completed' && p.status !== 'cancelled').length;
+  
+  const updateProjectStatus = (projectId: string, newStatus: ProjectStatus) => {
+    setProjects(projects.map(p => 
+      p.id === projectId ? { ...p, status: newStatus } : p
+    ));
+    
+    if (selectedProject && selectedProject.id === projectId) {
+      setSelectedProject({ ...selectedProject, status: newStatus });
+    }
+    
+    toast({
+      title: 'Статус обновлён',
+      description: `Статус изменён на "${PROJECT_STATUSES[newStatus].label}"`,
+    });
+  };
   
   const openProjectDetails = (project: Project) => {
     setSelectedProject(project);
@@ -353,12 +392,14 @@ export default function Index() {
                         {project.client}
                       </CardDescription>
                     </div>
-                    <Badge 
-                      variant={project.status === 'active' ? 'default' : 'secondary'}
-                      className={project.status === 'active' ? 'bg-gradient-to-r from-green-500 to-emerald-500' : ''}
-                    >
-                      {project.status === 'active' ? 'Активен' : project.status === 'completed' ? 'Завершен' : 'Планирование'}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        className={`${PROJECT_STATUSES[project.status].color} text-white border-0 flex items-center gap-1`}
+                      >
+                        <Icon name={PROJECT_STATUSES[project.status].icon} className="h-3 w-3" />
+                        {PROJECT_STATUSES[project.status].label}
+                      </Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -374,6 +415,15 @@ export default function Index() {
                       <span className="ml-2 font-medium">{new Date(project.endDate).toLocaleDateString('ru-RU')}</span>
                     </div>
                   </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Прогресс проекта</span>
+                      <span className="font-semibold">{PROJECT_STATUSES[project.status].progress}%</span>
+                    </div>
+                    <Progress value={PROJECT_STATUSES[project.status].progress} className="h-2" />
+                  </div>
+                  
                   <Separator />
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -656,7 +706,7 @@ export default function Index() {
                 </DialogHeader>
 
                 <div className="p-4 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 space-y-4 mb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="project-name" className="text-sm font-medium flex items-center">
                         <Icon name="Edit3" className="mr-1 h-3 w-3" />
@@ -670,6 +720,34 @@ export default function Index() {
                       />
                     </div>
                     
+                    <div className="space-y-2">
+                      <Label htmlFor="project-status" className="text-sm font-medium flex items-center">
+                        <Icon name="Activity" className="mr-1 h-3 w-3" />
+                        Статус проекта
+                      </Label>
+                      <Select
+                        value={selectedProject?.status}
+                        onValueChange={(value) => updateProjectStatus(selectedProject!.id, value as ProjectStatus)}
+                      >
+                        <SelectTrigger className="bg-white border-2 focus:border-purple-500">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(PROJECT_STATUSES).map(([key, config]) => (
+                            <SelectItem key={key} value={key}>
+                              <div className="flex items-center gap-2">
+                                <div className={`w-3 h-3 rounded-full ${config.color}`} />
+                                <Icon name={config.icon} className="h-3 w-3" />
+                                <span>{config.label}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="start-date" className="text-sm font-medium flex items-center">
                         <Icon name="Calendar" className="mr-1 h-3 w-3" />
@@ -700,14 +778,29 @@ export default function Index() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-purple-200">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Icon name="CalendarCheck" className="h-4 w-4 text-green-600" />
-                      <span className="font-medium">Дата окончания:</span>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-purple-200">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Icon name="CalendarCheck" className="h-4 w-4 text-green-600" />
+                        <span className="font-medium">Дата окончания:</span>
+                      </div>
+                      <span className="text-sm font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                        {editingProject && new Date(calculateEndDate(editingProject.startDate, editingProject.duration)).toLocaleDateString('ru-RU')}
+                      </span>
                     </div>
-                    <span className="text-sm font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                      {editingProject && new Date(calculateEndDate(editingProject.startDate, editingProject.duration)).toLocaleDateString('ru-RU')}
-                    </span>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-muted-foreground">Прогресс выполнения</span>
+                        <span className="font-bold text-purple-700">
+                          {selectedProject && PROJECT_STATUSES[selectedProject.status].progress}%
+                        </span>
+                      </div>
+                      <Progress 
+                        value={selectedProject ? PROJECT_STATUSES[selectedProject.status].progress : 0} 
+                        className="h-3"
+                      />
+                    </div>
                   </div>
                 </div>
 
