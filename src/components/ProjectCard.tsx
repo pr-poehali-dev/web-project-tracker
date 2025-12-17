@@ -18,6 +18,7 @@ interface ProjectCardProps {
   projectFiles: ProjectFile[];
   onUpdateStatus: (projectId: string, status: ProjectStatus) => void;
   onUpdateProject: (projectId: string, field: 'name' | 'startDate' | 'duration' | 'totalCost', value: string | number) => void;
+  onDeleteProject: (projectId: string) => void;
   onUpdateExpense: (expenseId: string, amount: number) => void;
   onCreateExpense: (expense: ProjectExpense) => void;
   onAddComment: (projectId: string, text: string) => void;
@@ -25,6 +26,7 @@ interface ProjectCardProps {
   getProjectTotalExpenses: (projectId: string) => number;
   getProjectMargin: (projectId: string) => number;
   getProjectMarginPercent: (projectId: string) => string;
+  isDeleted?: boolean;
 }
 
 export default function ProjectCard({ 
@@ -34,13 +36,15 @@ export default function ProjectCard({
   projectFiles,
   onUpdateStatus,
   onUpdateProject,
+  onDeleteProject,
   onUpdateExpense,
   onCreateExpense,
   onAddComment,
   onAddFile,
   getProjectTotalExpenses,
   getProjectMargin,
-  getProjectMarginPercent
+  getProjectMarginPercent,
+  isDeleted = false
 }: ProjectCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isExpensesOpen, setIsExpensesOpen] = useState(false);
@@ -50,6 +54,23 @@ export default function ProjectCard({
   const [editedName, setEditedName] = useState(project.name);
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [editedBudget, setEditedBudget] = useState(project.totalCost.toString());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDeleteProject(project.id);
+    setShowDeleteConfirm(false);
+  };
+
+  const handleCancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteConfirm(false);
+  };
   
   const statusInfo = PROJECT_STATUSES[project.status];
   const totalExpenses = getProjectTotalExpenses(project.id);
@@ -114,6 +135,17 @@ export default function ProjectCard({
             <Badge className={`${statusInfo.color} text-white shrink-0`}>
               {statusInfo.label}
             </Badge>
+            {!isDeleted && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDeleteClick}
+                className="h-8 w-8 p-0 shrink-0 hover:bg-red-50 hover:text-red-600 transition-colors"
+                title="Удалить проект"
+              >
+                <Icon name="Trash2" className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -127,6 +159,32 @@ export default function ProjectCard({
             </Button>
           </div>
         </div>
+        {showDeleteConfirm && (
+          <div className="px-6 pb-3">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3" onClick={(e) => e.stopPropagation()}>
+              <p className="text-sm text-red-800 mb-3 font-medium">Удалить проект "{project.name}"?</p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleConfirmDelete}
+                  className="flex-1"
+                >
+                  <Icon name="Trash2" className="mr-1 h-3 w-3" />
+                  Удалить
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCancelDelete}
+                  className="flex-1"
+                >
+                  Отмена
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </CardHeader>
       {isExpanded && (
         <CardContent className="space-y-4 pt-0">

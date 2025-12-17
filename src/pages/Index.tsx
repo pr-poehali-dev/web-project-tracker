@@ -57,6 +57,7 @@ export default function Index() {
     { id: '2', projectId: '1', name: 'Смета_проект.pdf', size: '1.8 MB', timestamp: '2024-01-22T11:30:00', url: '#' },
   ]);
   
+  const [deletedProjects, setDeletedProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [newComment, setNewComment] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -332,6 +333,32 @@ export default function Index() {
     });
   };
 
+  const deleteProject = (projectId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    setProjects(projects.filter(p => p.id !== projectId));
+    setDeletedProjects([...deletedProjects, project]);
+
+    toast({
+      title: 'Проект удалён',
+      description: `Проект "${project.name}" перемещён в удалённые`,
+    });
+  };
+
+  const restoreProject = (projectId: string) => {
+    const project = deletedProjects.find(p => p.id === projectId);
+    if (!project) return;
+
+    setDeletedProjects(deletedProjects.filter(p => p.id !== projectId));
+    setProjects([...projects, project]);
+
+    toast({
+      title: 'Проект восстановлен',
+      description: `Проект "${project.name}" возвращён в активные`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
       <div className="container mx-auto py-8 px-4">
@@ -343,7 +370,7 @@ export default function Index() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:w-[400px] mx-auto">
+          <TabsList className="grid w-full grid-cols-3 lg:w-[600px] mx-auto">
             <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
               <Icon name="LayoutDashboard" className="mr-2 h-4 w-4" />
               Обзор
@@ -351,6 +378,10 @@ export default function Index() {
             <TabsTrigger value="clients" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
               <Icon name="Users" className="mr-2 h-4 w-4" />
               Клиенты
+            </TabsTrigger>
+            <TabsTrigger value="deleted" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
+              <Icon name="Trash2" className="mr-2 h-4 w-4" />
+              Удалённые ({deletedProjects.length})
             </TabsTrigger>
           </TabsList>
 
@@ -379,6 +410,7 @@ export default function Index() {
                   projectFiles={projectFiles}
                   onUpdateStatus={updateProjectStatus}
                   onUpdateProject={updateProjectInCard}
+                  onDeleteProject={deleteProject}
                   onUpdateExpense={updateExpenseAmount}
                   onCreateExpense={(expense) => setProjectExpenses([...projectExpenses, expense])}
                   onAddComment={addCommentToProject}
@@ -417,6 +449,67 @@ export default function Index() {
                         Выручка
                       </span>
                       <span className="font-bold text-green-700">{client.totalRevenue.toLocaleString('ru-RU')} ₽</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="deleted" className="mt-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold mb-4 flex items-center">
+                <Icon name="Trash2" className="mr-2 h-6 w-6 text-red-600" />
+                Удалённые проекты
+              </h2>
+              {deletedProjects.length === 0 && (
+                <p className="text-muted-foreground text-center py-12 bg-white rounded-lg border-2 border-dashed">
+                  Нет удалённых проектов
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {deletedProjects.map((project) => (
+                <Card 
+                  key={project.id}
+                  className="group hover:shadow-xl transition-all duration-300 border-2 border-red-200 animate-fade-in overflow-hidden bg-gradient-to-br from-white to-red-50/30"
+                >
+                  <div className="h-2 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-xl mb-2 text-red-700 truncate">
+                          {project.name}
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground flex items-center gap-2">
+                          <Icon name="Building2" className="h-4 w-4" />
+                          {project.client}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => restoreProject(project.id)}
+                        className="shrink-0 border-green-300 text-green-700 hover:bg-green-50"
+                      >
+                        <Icon name="RotateCcw" className="mr-2 h-4 w-4" />
+                        Восстановить
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="p-3 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100">
+                        <p className="text-xs text-muted-foreground mb-1">Бюджет</p>
+                        <p className="font-bold text-blue-700">{project.totalCost.toLocaleString('ru-RU')} ₽</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100">
+                        <p className="text-xs text-muted-foreground mb-1">Период</p>
+                        <p className="font-bold text-gray-700 text-xs">
+                          {new Date(project.startDate).toLocaleDateString('ru-RU')} - {new Date(project.endDate).toLocaleDateString('ru-RU')}
+                        </p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
