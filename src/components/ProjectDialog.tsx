@@ -1,13 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/icon';
 import { Progress } from '@/components/ui/progress';
-import { Project, Comment, ProjectFile, ProjectExpense, EXPENSE_CATEGORIES, PROJECT_STATUSES } from '@/types/project';
+import { Project, ProjectExpense, EXPENSE_CATEGORIES, PROJECT_STATUSES } from '@/types/project';
 
 interface ProjectDialogProps {
   isOpen: boolean;
@@ -15,15 +12,9 @@ interface ProjectDialogProps {
   selectedProject: Project | null;
   editingProject: { name: string; startDate: string; duration: number } | null;
   projectExpenses: ProjectExpense[];
-  comments: Comment[];
-  projectFiles: ProjectFile[];
-  newComment: string;
-  setNewComment: (text: string) => void;
   setProjectExpenses: (expenses: ProjectExpense[]) => void;
   updateProject: (field: 'name' | 'startDate' | 'duration', value: string | number) => void;
   calculateEndDate: (startDate: string, durationDays: number) => string;
-  addComment: () => void;
-  addFile: (file: File) => void;
   updateExpenseAmount: (expenseId: string, amount: number) => void;
   getProjectTotalExpenses: (projectId: string) => number;
   getProjectMargin: (projectId: string) => number;
@@ -36,15 +27,9 @@ export default function ProjectDialog({
   selectedProject,
   editingProject,
   projectExpenses,
-  comments,
-  projectFiles,
-  newComment,
-  setNewComment,
   setProjectExpenses,
   updateProject,
   calculateEndDate,
-  addComment,
-  addFile,
   updateExpenseAmount,
   getProjectTotalExpenses,
   getProjectMargin,
@@ -52,8 +37,6 @@ export default function ProjectDialog({
 }: ProjectDialogProps) {
   if (!selectedProject) return null;
 
-  const projectComments = comments.filter(c => c.projectId === selectedProject.id);
-  const projectFilesForSelected = projectFiles.filter(f => f.projectId === selectedProject.id);
   const currentProjectExpenses = projectExpenses.filter(e => e.projectId === selectedProject.id);
 
   return (
@@ -140,19 +123,15 @@ export default function ProjectDialog({
           </div>
         </div>
 
-        <Tabs defaultValue="expenses" className="px-6 pb-4 flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-2 mt-0">
-            <TabsTrigger value="expenses" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
-              <Icon name="DollarSign" className="mr-2 h-4 w-4" />
+        <div className="px-6 pb-4 flex-1 flex flex-col">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2 text-purple-700">
+              <Icon name="DollarSign" className="h-5 w-5" />
               Затраты ({currentProjectExpenses.length})
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
-              <Icon name="Activity" className="mr-2 h-4 w-4" />
-              Активность ({projectComments.length + projectFilesForSelected.length})
-            </TabsTrigger>
-          </TabsList>
+            </h3>
+          </div>
 
-          <TabsContent value="expenses" className="flex-1 overflow-y-auto space-y-4 mt-4">
+          <div className="flex-1 overflow-y-auto space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground mb-1">Стоимость проекта</p>
@@ -220,140 +199,8 @@ export default function ProjectDialog({
                   })}
                 </div>
               </ScrollArea>
-            </TabsContent>
-
-          <TabsContent value="activity" className="flex-1 overflow-y-auto space-y-4 mt-4">
-            <ScrollArea className="flex-1 pr-4">
-                <div className="space-y-3">
-                  {projectComments.length === 0 && projectFilesForSelected.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Icon name="Activity" className="mx-auto h-12 w-12 mb-2 opacity-50" />
-                      <p>Активности пока нет</p>
-                    </div>
-                  ) : (
-                    [...projectComments.map(c => ({ ...c, type: 'comment' as const })), 
-                     ...projectFilesForSelected.map(f => ({ ...f, type: 'file' as const }))]
-                      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-                      .map((item) => (
-                        item.type === 'comment' ? (
-                          <div 
-                            key={item.id} 
-                            className="p-4 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100 animate-fade-in hover:shadow-sm transition-all"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white shrink-0">
-                                <Icon name="MessageSquare" className="h-5 w-5" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 mb-1">Комментарий</p>
-                                <p className="text-sm text-gray-700 mb-2">{item.text}</p>
-                                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                  <Icon name="Clock" className="h-3 w-3" />
-                                  {new Date(item.timestamp).toLocaleString('ru-RU', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div 
-                            key={item.id}
-                            className="p-4 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 animate-fade-in hover:shadow-sm transition-all group"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white shrink-0">
-                                <Icon name="FileText" className="h-5 w-5" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 mb-1">Файл добавлен</p>
-                                <p className="text-sm text-gray-700 truncate font-medium mb-1">{item.name}</p>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-xs text-muted-foreground">{item.size}</span>
-                                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <Icon name="Clock" className="h-3 w-3" />
-                                    {new Date(item.timestamp).toLocaleString('ru-RU', {
-                                      day: 'numeric',
-                                      month: 'long',
-                                      year: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit'
-                                    })}
-                                  </span>
-                                </div>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                asChild
-                              >
-                                <a href={item.url} target="_blank" rel="noopener noreferrer">
-                                  <Icon name="Download" className="h-4 w-4" />
-                                </a>
-                              </Button>
-                            </div>
-                          </div>
-                        )
-                      ))
-                  )}
-                </div>
-            </ScrollArea>
-
-            <div className="space-y-3 pt-4 border-t">
-                <div className="space-y-2">
-                  <Label htmlFor="new-comment">Добавить комментарий</Label>
-                  <div className="flex gap-2">
-                    <Textarea
-                      id="new-comment"
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Введите ваш комментарий..."
-                      className="resize-none"
-                      rows={3}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                          addComment();
-                        }
-                      }}
-                    />
-                  </div>
-                  <Button 
-                    onClick={addComment}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                    disabled={!newComment.trim()}
-                  >
-                    <Icon name="Send" className="mr-2 h-4 w-4" />
-                    Добавить комментарий
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="file-upload">Загрузить PDF файл</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="file-upload"
-                      type="file"
-                      accept=".pdf,application/pdf"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          addFile(file);
-                          e.target.value = '';
-                        }
-                      }}
-                      className="cursor-pointer"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">Поддерживаются только PDF файлы</p>
-                </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

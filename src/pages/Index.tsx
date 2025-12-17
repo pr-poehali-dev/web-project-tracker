@@ -366,15 +366,9 @@ export default function Index() {
         selectedProject={selectedProject}
         editingProject={editingProject}
         projectExpenses={projectExpenses}
-        comments={comments}
-        projectFiles={projectFiles}
-        newComment={newComment}
-        setNewComment={setNewComment}
         setProjectExpenses={setProjectExpenses}
         updateProject={updateProject}
         calculateEndDate={calculateEndDate}
-        addComment={addComment}
-        addFile={addFile}
         updateExpenseAmount={updateExpenseAmount}
         getProjectTotalExpenses={getProjectTotalExpenses}
         getProjectMargin={getProjectMargin}
