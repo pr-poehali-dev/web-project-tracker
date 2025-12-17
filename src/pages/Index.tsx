@@ -7,6 +7,7 @@ import { Project, Client, Comment, ProjectFile, ProjectExpense, ProjectStatus } 
 import StatsCards from '@/components/StatsCards';
 import ProjectCard from '@/components/ProjectCard';
 import ProjectDialog from '@/components/ProjectDialog';
+import NewProjectForm from '@/components/NewProjectForm';
 
 export default function Index() {
   const [projects, setProjects] = useState<Project[]>([
@@ -305,6 +306,39 @@ export default function Index() {
     return project.totalCost > 0 ? ((margin / project.totalCost) * 100).toFixed(1) : '0';
   };
 
+  const calculateEndDate = (startDate: string, duration: number): string => {
+    const start = new Date(startDate);
+    const end = new Date(start);
+    end.setDate(end.getDate() + duration);
+    return end.toISOString().split('T')[0];
+  };
+
+  const createNewProject = (projectData: {
+    name: string;
+    client: string;
+    startDate: string;
+    duration: number;
+    totalCost: number;
+  }) => {
+    const newProject: Project = {
+      id: Date.now().toString(),
+      name: projectData.name,
+      client: projectData.client,
+      startDate: projectData.startDate,
+      endDate: calculateEndDate(projectData.startDate, projectData.duration),
+      totalCost: projectData.totalCost,
+      status: 'plan',
+      duration: projectData.duration,
+    };
+
+    setProjects([...projects, newProject]);
+
+    toast({
+      title: 'Проект создан',
+      description: `Проект "${projectData.name}" успешно добавлен`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
       <div className="container mx-auto py-8 px-4">
@@ -342,6 +376,7 @@ export default function Index() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <NewProjectForm onCreateProject={createNewProject} />
               {projects.map((project) => (
                 <ProjectCard
                   key={project.id}
