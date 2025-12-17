@@ -150,12 +150,6 @@ export default function Index() {
   
   const { toast } = useToast();
 
-  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const margin = calcProjectCost - totalExpenses;
-  const marginPercent = calcProjectCost > 0 ? ((margin / calcProjectCost) * 100).toFixed(1) : '0';
-
-
-
   const updateExpenseAmount = (expenseId: string, amount: number) => {
     setProjectExpenses(projectExpenses.map(exp => 
       exp.id === expenseId ? { ...exp, amount } : exp
