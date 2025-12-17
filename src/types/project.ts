@@ -60,7 +60,7 @@ export const EXPENSE_CATEGORIES = [
   'Доставка Аэропорт-Склад',
   'Хранение на складе',
   'Доставка по РФ',
-  'Комиссия банка за перевод клиенту',
+  'Комиссия банка за перевод',
 ] as const;
 
 export const PROJECT_STATUSES: Record<ProjectStatus, { label: string; color: string; icon: string; progress: number }> = {
