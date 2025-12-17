@@ -350,6 +350,29 @@ export function useProjectData() {
     });
   };
 
+  const deleteClient = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+
+    const clientProjects = projects.filter(p => p.client === client.name);
+    
+    if (clientProjects.length > 0) {
+      toast({
+        title: 'Невозможно удалить',
+        description: `У клиента "${client.name}" есть ${clientProjects.length} активных проектов`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setClients(clients.filter(c => c.id !== clientId));
+
+    toast({
+      title: 'Клиент удалён',
+      description: `Клиент "${client.name}" успешно удалён`,
+    });
+  };
+
   const createNewProject = (projectData: {
     name: string;
     client: string;
@@ -451,5 +474,6 @@ export function useProjectData() {
     restoreProject,
     permanentlyDeleteProject,
     updateClientName,
+    deleteClient,
   };
 }
