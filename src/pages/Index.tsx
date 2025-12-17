@@ -59,11 +59,25 @@ interface Client {
   totalRevenue: number;
 }
 
-interface Expense {
+interface ProjectExpense {
   id: string;
+  projectId: string;
   category: string;
   amount: number;
 }
+
+const EXPENSE_CATEGORIES = [
+  'Стоимость товара',
+  'Комиссия банка за перевод',
+  'Доставка из-за рубежа',
+  'Таможенное оформление',
+  'Оформление ДС',
+  'Пошлины',
+  'Доставка Аэропорт-Склад',
+  'Хранение на складе',
+  'Доставка по РФ',
+  'Комиссия банка за перевод клиенту',
+] as const;
 
 const PROJECT_STATUSES: Record<ProjectStatus, { label: string; color: string; icon: string; progress: number }> = {
   contract: { label: 'Договор', color: 'bg-blue-500', icon: 'FileText', progress: 10 },
@@ -105,15 +119,15 @@ export default function Index() {
     { id: '3', name: 'ООО "Инновации+"', projectsCount: 2, totalRevenue: 980000 }
   ]);
 
-  const [expenses, setExpenses] = useState<Expense[]>([
-    { id: '1', category: 'Разработка', amount: 450000 },
-    { id: '2', category: 'Дизайн', amount: 180000 },
-    { id: '3', category: 'Тестирование', amount: 95000 }
+  const [projectExpenses, setProjectExpenses] = useState<ProjectExpense[]>([
+    { id: '1', projectId: '1', category: 'Стоимость товара', amount: 450000 },
+    { id: '2', projectId: '1', category: 'Комиссия банка за перевод', amount: 18000 },
+    { id: '3', projectId: '1', category: 'Доставка из-за рубежа', amount: 85000 },
+    { id: '4', projectId: '1', category: 'Таможенное оформление', amount: 35000 },
+    { id: '5', projectId: '1', category: 'Пошлины', amount: 67500 },
+    { id: '6', projectId: '2', category: 'Стоимость товара', amount: 780000 },
+    { id: '7', projectId: '2', category: 'Доставка по РФ', amount: 42000 },
   ]);
-
-  const [calcProjectCost, setCalcProjectCost] = useState(850000);
-  const [newCategory, setNewCategory] = useState('');
-  const [newAmount, setNewAmount] = useState('');
   
   const [comments, setComments] = useState<Comment[]>([
     { id: '1', projectId: '1', text: 'Согласован дизайн главной страницы', timestamp: '2024-02-10T10:30:00' },
@@ -140,23 +154,17 @@ export default function Index() {
   const margin = calcProjectCost - totalExpenses;
   const marginPercent = calcProjectCost > 0 ? ((margin / calcProjectCost) * 100).toFixed(1) : '0';
 
-  const addExpense = () => {
-    if (newCategory && newAmount) {
-      setExpenses([
-        ...expenses,
-        {
-          id: Date.now().toString(),
-          category: newCategory,
-          amount: parseFloat(newAmount)
-        }
-      ]);
-      setNewCategory('');
-      setNewAmount('');
-    }
-  };
 
-  const removeExpense = (id: string) => {
-    setExpenses(expenses.filter(exp => exp.id !== id));
+
+  const updateExpenseAmount = (expenseId: string, amount: number) => {
+    setProjectExpenses(projectExpenses.map(exp => 
+      exp.id === expenseId ? { ...exp, amount } : exp
+    ));
+    
+    toast({
+      title: 'Затрата обновлена',
+      description: 'Сумма затраты успешно изменена',
+    });
   };
 
   const totalRevenue = projects.reduce((sum, p) => sum + p.totalCost, 0);
@@ -300,6 +308,25 @@ export default function Index() {
   
   const projectComments = selectedProject ? comments.filter(c => c.projectId === selectedProject.id) : [];
   const projectFilesForSelected = selectedProject ? projectFiles.filter(f => f.projectId === selectedProject.id) : [];
+  const currentProjectExpenses = selectedProject ? projectExpenses.filter(e => e.projectId === selectedProject.id) : [];
+  
+  const getProjectTotalExpenses = (projectId: string) => {
+    return projectExpenses
+      .filter(e => e.projectId === projectId)
+      .reduce((sum, e) => sum + e.amount, 0);
+  };
+  
+  const getProjectMargin = (projectId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return 0;
+    return project.totalCost - getProjectTotalExpenses(projectId);
+  };
+  
+  const getProjectMarginPercent = (projectId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project || project.totalCost === 0) return 0;
+    return ((getProjectMargin(projectId) / project.totalCost) * 100).toFixed(1);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
@@ -489,25 +516,41 @@ export default function Index() {
                   <CardDescription>Структура расходов по категориям</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {expenses.map((expense, index) => {
-                    const percentage = totalExpenses > 0 ? (expense.amount / totalExpenses) * 100 : 0;
-                    const colors = ['from-purple-500 to-purple-600', 'from-pink-500 to-pink-600', 'from-blue-500 to-blue-600', 'from-indigo-500 to-indigo-600'];
-                    return (
-                      <div key={expense.id} className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium">{expense.category}</span>
-                          <span className="text-muted-foreground">{expense.amount.toLocaleString('ru-RU')} ₽</span>
-                        </div>
-                        <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full bg-gradient-to-r ${colors[index % colors.length]} transition-all duration-500`}
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground">{percentage.toFixed(1)}% от общих затрат</p>
-                      </div>
-                    );
-                  })}
+                  {projectExpenses.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Icon name="PieChart" className="mx-auto h-12 w-12 mb-2 opacity-50" />
+                      <p>Затрат пока нет</p>
+                    </div>
+                  ) : (
+                    (() => {
+                      const totalExp = projectExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+                      const colors = ['from-purple-500 to-purple-600', 'from-pink-500 to-pink-600', 'from-blue-500 to-blue-600', 'from-indigo-500 to-indigo-600', 'from-orange-500 to-orange-600', 'from-cyan-500 to-cyan-600'];
+                      
+                      const categoryTotals = EXPENSE_CATEGORIES.map(cat => ({
+                        category: cat,
+                        total: projectExpenses.filter(e => e.category === cat).reduce((sum, e) => sum + e.amount, 0)
+                      })).filter(item => item.total > 0);
+                      
+                      return categoryTotals.map((item, index) => {
+                        const percentage = totalExp > 0 ? (item.total / totalExp) * 100 : 0;
+                        return (
+                          <div key={item.category} className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="font-medium">{item.category}</span>
+                              <span className="text-muted-foreground">{item.total.toLocaleString('ru-RU')} ₽</span>
+                            </div>
+                            <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full bg-gradient-to-r ${colors[index % colors.length]} transition-all duration-500`}
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground">{percentage.toFixed(1)}% от общих затрат</p>
+                          </div>
+                        );
+                      });
+                    })()
+                  )}
                 </CardContent>
               </Card>
 
@@ -530,14 +573,14 @@ export default function Index() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Затраты:</span>
                       <span className="text-xl font-bold text-pink-600">
-                        {(totalExpenses / 1000000).toFixed(2)}М ₽
+                        {(projectExpenses.reduce((sum, e) => sum + e.amount, 0) / 1000000).toFixed(2)}М ₽
                       </span>
                     </div>
                     <Separator className="my-3" />
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Маржа:</span>
                       <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                        {((totalRevenue - totalExpenses) / 1000000).toFixed(2)}М ₽
+                        {((totalRevenue - projectExpenses.reduce((sum, e) => sum + e.amount, 0)) / 1000000).toFixed(2)}М ₽
                       </span>
                     </div>
                   </div>
@@ -546,11 +589,11 @@ export default function Index() {
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-green-800">Маржинальность</span>
                       <span className="text-2xl font-bold text-green-700">
-                        {totalRevenue > 0 ? (((totalRevenue - totalExpenses) / totalRevenue) * 100).toFixed(1) : '0'}%
+                        {totalRevenue > 0 ? (((totalRevenue - projectExpenses.reduce((sum, e) => sum + e.amount, 0)) / totalRevenue) * 100).toFixed(1) : '0'}%
                       </span>
                     </div>
                     <Progress 
-                      value={totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue) * 100 : 0} 
+                      value={totalRevenue > 0 ? ((totalRevenue - projectExpenses.reduce((sum, e) => sum + e.amount, 0)) / totalRevenue) * 100 : 0} 
                       className="h-2"
                     />
                   </div>
@@ -560,126 +603,11 @@ export default function Index() {
           </TabsContent>
 
           <TabsContent value="calculator" className="mt-6">
-            <Card className="backdrop-blur-sm bg-white/90">
-              <CardHeader>
-                <CardTitle className="flex items-center text-2xl">
-                  <Icon name="Calculator" className="mr-3 h-6 w-6 text-purple-600" />
-                  Калькулятор маржи проекта
-                </CardTitle>
-                <CardDescription>Рассчитайте маржинальность, добавив категории затрат</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="project-cost" className="text-base">Общая стоимость проекта (без НДС)</Label>
-                  <div className="relative">
-                    <Input
-                      id="project-cost"
-                      type="number"
-                      value={calcProjectCost}
-                      onChange={(e) => setCalcProjectCost(parseFloat(e.target.value) || 0)}
-                      className="text-xl font-semibold h-14 pr-12 border-2 focus:border-purple-500"
-                      placeholder="0"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">₽</span>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Категории затрат</h3>
-                    <Badge variant="outline" className="text-base px-3 py-1">
-                      Всего: {totalExpenses.toLocaleString('ru-RU')} ₽
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-3">
-                    {expenses.map((expense) => (
-                      <div key={expense.id} className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 animate-scale-in">
-                        <Icon name="Tag" className="h-5 w-5 text-purple-600" />
-                        <span className="flex-1 font-medium">{expense.category}</span>
-                        <span className="font-semibold text-purple-700">{expense.amount.toLocaleString('ru-RU')} ₽</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeExpense(expense.id)}
-                          className="hover:bg-red-100 hover:text-red-600"
-                        >
-                          <Icon name="Trash2" className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="md:col-span-1 space-y-2">
-                      <Label htmlFor="category">Категория</Label>
-                      <Input
-                        id="category"
-                        value={newCategory}
-                        onChange={(e) => setNewCategory(e.target.value)}
-                        placeholder="Например: Разработка"
-                        className="border-2"
-                      />
-                    </div>
-                    <div className="md:col-span-1 space-y-2">
-                      <Label htmlFor="amount">Сумма (₽)</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        value={newAmount}
-                        onChange={(e) => setNewAmount(e.target.value)}
-                        placeholder="0"
-                        className="border-2"
-                      />
-                    </div>
-                    <div className="md:col-span-1 flex items-end">
-                      <Button 
-                        onClick={addExpense} 
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                      >
-                        <Icon name="Plus" className="mr-2 h-4 w-4" />
-                        Добавить затрату
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4 p-6 rounded-2xl bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 border-2 border-purple-200">
-                  <h3 className="text-xl font-bold text-center">Результаты расчета</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl">
-                      <p className="text-sm text-muted-foreground mb-1">Стоимость проекта</p>
-                      <p className="text-2xl font-bold text-purple-700">{calcProjectCost.toLocaleString('ru-RU')} ₽</p>
-                    </div>
-                    
-                    <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl">
-                      <p className="text-sm text-muted-foreground mb-1">Всего затрат</p>
-                      <p className="text-2xl font-bold text-pink-600">{totalExpenses.toLocaleString('ru-RU')} ₽</p>
-                    </div>
-                    
-                    <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl">
-                      <p className="text-sm text-muted-foreground mb-1">Маржа</p>
-                      <p className={`text-2xl font-bold ${margin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {margin.toLocaleString('ru-RU')} ₽
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="p-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white text-center">
-                    <p className="text-sm opacity-90 mb-2">Маржинальность проекта</p>
-                    <p className="text-5xl font-bold">{marginPercent}%</p>
-                    <p className="text-sm opacity-90 mt-2">
-                      {parseFloat(marginPercent) >= 30 ? '✨ Отличная маржа!' : parseFloat(marginPercent) >= 15 ? '👍 Хорошая маржа' : '⚠️ Низкая маржа'}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <p className="text-center text-muted-foreground py-8">
+              Калькулятор маржи теперь доступен в каждом проекте отдельно.
+              <br />
+              Откройте проект для расчёта затрат и маржинальности.
+            </p>
           </TabsContent>
         </Tabs>
         
@@ -804,8 +732,12 @@ export default function Index() {
                   </div>
                 </div>
 
-                <Tabs defaultValue="comments" className="flex-1 overflow-hidden flex flex-col">
-                  <TabsList className="grid w-full grid-cols-2">
+                <Tabs defaultValue="expenses" className="flex-1 overflow-hidden flex flex-col">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="expenses" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
+                      <Icon name="DollarSign" className="mr-2 h-4 w-4" />
+                      Затраты ({currentProjectExpenses.length})
+                    </TabsTrigger>
                     <TabsTrigger value="comments" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
                       <Icon name="MessageSquare" className="mr-2 h-4 w-4" />
                       Комментарии ({projectComments.length})
@@ -815,6 +747,76 @@ export default function Index() {
                       Файлы ({projectFilesForSelected.length})
                     </TabsTrigger>
                   </TabsList>
+
+                  <TabsContent value="expenses" className="flex-1 overflow-hidden flex flex-col space-y-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground mb-1">Стоимость проекта</p>
+                        <p className="text-2xl font-bold text-purple-700">
+                          {selectedProject?.totalCost.toLocaleString('ru-RU')} ₽
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground mb-1">Всего затрат</p>
+                        <p className="text-2xl font-bold text-pink-600">
+                          {selectedProject && getProjectTotalExpenses(selectedProject.id).toLocaleString('ru-RU')} ₽
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground mb-1">Маржа</p>
+                        <p className={`text-2xl font-bold ${selectedProject && getProjectMargin(selectedProject.id) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {selectedProject && getProjectMargin(selectedProject.id).toLocaleString('ru-RU')} ₽
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {selectedProject && getProjectMarginPercent(selectedProject.id)}%
+                        </p>
+                      </div>
+                    </div>
+
+                    <ScrollArea className="flex-1 pr-4">
+                      <div className="space-y-3">
+                        {EXPENSE_CATEGORIES.map((category) => {
+                          const expense = currentProjectExpenses.find(e => e.category === category);
+                          const expenseId = expense?.id || '';
+                          const amount = expense?.amount || 0;
+                          
+                          return (
+                            <div 
+                              key={category}
+                              className="p-4 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 animate-fade-in hover:shadow-md transition-all"
+                            >
+                              <div className="space-y-2">
+                                <Label className="text-sm font-medium text-gray-700">{category}</Label>
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    type="number"
+                                    value={amount}
+                                    onChange={(e) => {
+                                      const newAmount = parseFloat(e.target.value) || 0;
+                                      if (expense) {
+                                        updateExpenseAmount(expenseId, newAmount);
+                                      } else {
+                                        const newExpense: ProjectExpense = {
+                                          id: Date.now().toString(),
+                                          projectId: selectedProject!.id,
+                                          category,
+                                          amount: newAmount,
+                                        };
+                                        setProjectExpenses([...projectExpenses, newExpense]);
+                                      }
+                                    }}
+                                    className="flex-1 bg-white border-2 focus:border-purple-500"
+                                    placeholder="0"
+                                  />
+                                  <span className="text-muted-foreground font-medium whitespace-nowrap">₽</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
 
                   <TabsContent value="comments" className="flex-1 overflow-hidden flex flex-col space-y-4 mt-4">
                     <ScrollArea className="flex-1 pr-4">
