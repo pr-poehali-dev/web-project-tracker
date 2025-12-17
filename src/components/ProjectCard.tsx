@@ -90,20 +90,20 @@ export default function ProjectCard({
             onAddFile={onAddFile}
           />
 
-          <div className="space-y-2 pt-2 border-t" onClick={(e) => e.stopPropagation()}>
-            <label className="text-sm font-medium">Изменить статус</label>
+          <div className="space-y-3 pt-4 border-t" onClick={(e) => e.stopPropagation()}>
+            <label className="text-base font-semibold">Изменить статус</label>
             <Select
               value={project.status}
               onValueChange={(value) => onUpdateStatus(project.id, value as ProjectStatus)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full h-12 text-base font-medium border-2 hover:border-purple-400 transition-colors shadow-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(PROJECT_STATUSES).map(([key, value]) => (
-                  <SelectItem key={key} value={key}>
-                    <div className="flex items-center gap-2">
-                      <div className={`h-2 w-2 rounded-full ${value.color}`}></div>
+                  <SelectItem key={key} value={key} className="text-base py-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`h-3 w-3 rounded-full ${value.color}`}></div>
                       {value.label}
                     </div>
                   </SelectItem>
