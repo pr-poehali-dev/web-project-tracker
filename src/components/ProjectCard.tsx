@@ -42,6 +42,7 @@ export default function ProjectCard({
   getProjectMargin,
   getProjectMarginPercent
 }: ProjectCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isExpensesOpen, setIsExpensesOpen] = useState(false);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -61,7 +62,7 @@ export default function ProjectCard({
       className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-purple-300 animate-fade-in overflow-hidden bg-gradient-to-br from-white to-purple-50/30"
     >
       <div className={`h-2 ${statusInfo.color}`}></div>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             {isEditingName ? (
@@ -107,12 +108,26 @@ export default function ProjectCard({
               {project.client}
             </p>
           </div>
-          <Badge className={`${statusInfo.color} text-white shrink-0`}>
-            {statusInfo.label}
-          </Badge>
+          <div className="flex items-start gap-2">
+            <Badge className={`${statusInfo.color} text-white shrink-0`}>
+              {statusInfo.label}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(!isExpanded);
+              }}
+              className="h-8 w-8 p-0 shrink-0"
+            >
+              <Icon name={isExpanded ? "ChevronUp" : "ChevronDown"} className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      {isExpanded && (
+        <CardContent className="space-y-4 pt-0">
         <div className="grid grid-cols-2 gap-3 text-sm" onClick={(e) => e.stopPropagation()}>
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground flex items-center gap-1">
@@ -396,7 +411,8 @@ export default function ProjectCard({
             </SelectContent>
           </Select>
         </div>
-      </CardContent>
+        </CardContent>
+      )}
     </Card>
   );
 }
