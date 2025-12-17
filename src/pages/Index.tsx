@@ -45,7 +45,7 @@ export default function Index() {
       <div className="container mx-auto py-8 px-4">
         <div className="mb-8 text-center">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent mb-2 animate-fade-in">
-            Project Tracker
+            Менеджер проектов
           </h1>
           <p className="text-muted-foreground text-lg">Управление проектами и финансами</p>
         </div>
