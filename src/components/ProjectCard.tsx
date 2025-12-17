@@ -7,15 +7,21 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Project, ProjectStatus, PROJECT_STATUSES, ProjectExpense, EXPENSE_CATEGORIES } from '@/types/project';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Project, ProjectStatus, PROJECT_STATUSES, ProjectExpense, EXPENSE_CATEGORIES, Comment, ProjectFile } from '@/types/project';
 
 interface ProjectCardProps {
   project: Project;
   projectExpenses: ProjectExpense[];
+  comments: Comment[];
+  projectFiles: ProjectFile[];
   onOpenDetails: (project: Project) => void;
   onUpdateStatus: (projectId: string, status: ProjectStatus) => void;
   onUpdateExpense: (expenseId: string, amount: number) => void;
   onCreateExpense: (expense: ProjectExpense) => void;
+  onAddComment: (projectId: string, text: string) => void;
+  onAddFile: (projectId: string, file: File) => void;
   getProjectTotalExpenses: (projectId: string) => number;
   getProjectMargin: (projectId: string) => number;
   getProjectMarginPercent: (projectId: string) => string;
@@ -24,20 +30,29 @@ interface ProjectCardProps {
 export default function ProjectCard({ 
   project, 
   projectExpenses,
+  comments,
+  projectFiles,
   onOpenDetails, 
   onUpdateStatus,
   onUpdateExpense,
   onCreateExpense,
+  onAddComment,
+  onAddFile,
   getProjectTotalExpenses,
   getProjectMargin,
   getProjectMarginPercent
 }: ProjectCardProps) {
   const [isExpensesOpen, setIsExpensesOpen] = useState(false);
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  
   const statusInfo = PROJECT_STATUSES[project.status];
   const totalExpenses = getProjectTotalExpenses(project.id);
   const margin = getProjectMargin(project.id);
   const marginPercent = getProjectMarginPercent(project.id);
   const currentProjectExpenses = projectExpenses.filter(e => e.projectId === project.id);
+  const projectComments = comments.filter(c => c.projectId === project.id);
+  const projectFilesForProject = projectFiles.filter(f => f.projectId === project.id);
 
   return (
     <Card 
@@ -169,6 +184,138 @@ export default function ProjectCard({
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        <div className="pt-4 border-t space-y-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsActivityOpen(!isActivityOpen);
+            }}
+            className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-purple-50 transition-colors"
+          >
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Icon name="Activity" className="h-4 w-4 text-purple-600" />
+              Активность ({projectComments.length + projectFilesForProject.length})
+            </h3>
+            <Icon 
+              name={isActivityOpen ? "ChevronUp" : "ChevronDown"} 
+              className="h-4 w-4 text-purple-600 transition-transform" 
+            />
+          </button>
+          
+          {isActivityOpen && (
+            <div className="space-y-3 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+              <ScrollArea className="max-h-[300px] pr-2">
+                <div className="space-y-2">
+                  {projectComments.length === 0 && projectFilesForProject.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground text-sm">
+                      <Icon name="Activity" className="mx-auto h-8 w-8 mb-1 opacity-50" />
+                      <p>Активности пока нет</p>
+                    </div>
+                  ) : (
+                    [...projectComments.map(c => ({ ...c, type: 'comment' as const })), 
+                     ...projectFilesForProject.map(f => ({ ...f, type: 'file' as const }))]
+                      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                      .map((item) => (
+                        item.type === 'comment' ? (
+                          <div 
+                            key={item.id} 
+                            className="p-3 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100"
+                          >
+                            <div className="flex items-start gap-2">
+                              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white shrink-0">
+                                <Icon name="MessageSquare" className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs text-gray-700 mb-1">{item.text}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(item.timestamp).toLocaleString('ru-RU', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div 
+                            key={item.id}
+                            className="p-3 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100"
+                          >
+                            <div className="flex items-start gap-2">
+                              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white shrink-0">
+                                <Icon name="FileText" className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-gray-700 truncate">{item.name}</p>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <span>{item.size}</span>
+                                  <span>•</span>
+                                  <span>
+                                    {new Date(item.timestamp).toLocaleString('ru-RU', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      ))
+                  )}
+                </div>
+              </ScrollArea>
+
+              <div className="space-y-2 pt-2 border-t">
+                <Label htmlFor={`comment-${project.id}`} className="text-xs">Добавить комментарий</Label>
+                <Textarea
+                  id={`comment-${project.id}`}
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Введите комментарий..."
+                  className="resize-none text-sm"
+                  rows={2}
+                />
+                <Button 
+                  onClick={() => {
+                    if (newComment.trim()) {
+                      onAddComment(project.id, newComment.trim());
+                      setNewComment('');
+                    }
+                  }}
+                  size="sm"
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  disabled={!newComment.trim()}
+                >
+                  <Icon name="Send" className="mr-2 h-3 w-3" />
+                  Отправить
+                </Button>
+              </div>
+
+              <div className="space-y-2 pt-2 border-t">
+                <Label htmlFor={`file-${project.id}`} className="text-xs">Загрузить PDF файл</Label>
+                <Input
+                  id={`file-${project.id}`}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      onAddFile(project.id, file);
+                      e.target.value = '';
+                    }
+                  }}
+                  className="cursor-pointer text-xs"
+                />
+              </div>
             </div>
           )}
         </div>
