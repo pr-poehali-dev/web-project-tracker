@@ -8,6 +8,26 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
+
+interface Comment {
+  id: string;
+  projectId: string;
+  text: string;
+  timestamp: string;
+}
+
+interface ProjectFile {
+  id: string;
+  projectId: string;
+  name: string;
+  size: string;
+  timestamp: string;
+  url: string;
+}
 
 interface Project {
   id: string;
@@ -69,6 +89,22 @@ export default function Index() {
   const [calcProjectCost, setCalcProjectCost] = useState(850000);
   const [newCategory, setNewCategory] = useState('');
   const [newAmount, setNewAmount] = useState('');
+  
+  const [comments, setComments] = useState<Comment[]>([
+    { id: '1', projectId: '1', text: 'Согласован дизайн главной страницы', timestamp: '2024-02-10T10:30:00' },
+    { id: '2', projectId: '1', text: 'Ожидаем утверждение макетов от клиента', timestamp: '2024-02-12T14:15:00' },
+  ]);
+  
+  const [projectFiles, setProjectFiles] = useState<ProjectFile[]>([
+    { id: '1', projectId: '1', name: 'Договор_ТехноСтрой.pdf', size: '2.4 MB', timestamp: '2024-01-20T09:00:00', url: '#' },
+    { id: '2', projectId: '1', name: 'Смета_проект.pdf', size: '1.8 MB', timestamp: '2024-01-22T11:30:00', url: '#' },
+  ]);
+  
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [newComment, setNewComment] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const { toast } = useToast();
 
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
   const margin = calcProjectCost - totalExpenses;
@@ -95,6 +131,76 @@ export default function Index() {
 
   const totalRevenue = projects.reduce((sum, p) => sum + p.totalCost, 0);
   const activeProjects = projects.filter(p => p.status === 'active').length;
+  
+  const openProjectDetails = (project: Project) => {
+    setSelectedProject(project);
+    setIsDialogOpen(true);
+  };
+  
+  const addComment = () => {
+    if (newComment.trim() && selectedProject) {
+      const comment: Comment = {
+        id: Date.now().toString(),
+        projectId: selectedProject.id,
+        text: newComment.trim(),
+        timestamp: new Date().toISOString(),
+      };
+      setComments([...comments, comment]);
+      setNewComment('');
+      toast({
+        title: 'Комментарий добавлен',
+        description: 'Комментарий успешно сохранён',
+      });
+    }
+  };
+  
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && selectedProject) {
+      if (file.type !== 'application/pdf') {
+        toast({
+          title: 'Ошибка',
+          description: 'Можно загружать только PDF файлы',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      const newFile: ProjectFile = {
+        id: Date.now().toString(),
+        projectId: selectedProject.id,
+        name: file.name,
+        size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+        timestamp: new Date().toISOString(),
+        url: URL.createObjectURL(file),
+      };
+      setProjectFiles([...projectFiles, newFile]);
+      toast({
+        title: 'Файл загружен',
+        description: `${file.name} успешно прикреплён к проекту`,
+      });
+      event.target.value = '';
+    }
+  };
+  
+  const deleteComment = (commentId: string) => {
+    setComments(comments.filter(c => c.id !== commentId));
+    toast({
+      title: 'Комментарий удалён',
+      description: 'Комментарий успешно удалён',
+    });
+  };
+  
+  const deleteFile = (fileId: string) => {
+    setProjectFiles(projectFiles.filter(f => f.id !== fileId));
+    toast({
+      title: 'Файл удалён',
+      description: 'Файл успешно удалён из проекта',
+    });
+  };
+  
+  const projectComments = selectedProject ? comments.filter(c => c.projectId === selectedProject.id) : [];
+  const projectFilesForSelected = selectedProject ? projectFiles.filter(f => f.projectId === selectedProject.id) : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
@@ -219,7 +325,11 @@ export default function Index() {
                         </p>
                       </div>
                     </div>
-                    <Button variant="outline" className="hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50">
+                    <Button 
+                      variant="outline" 
+                      className="hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50"
+                      onClick={() => openProjectDetails(project)}
+                    >
                       <Icon name="Eye" className="mr-2 h-4 w-4" />
                       Подробнее
                     </Button>
@@ -462,6 +572,185 @@ export default function Index() {
             </Card>
           </TabsContent>
         </Tabs>
+        
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            {selectedProject && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    {selectedProject.name}
+                  </DialogTitle>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge 
+                      variant={selectedProject.status === 'active' ? 'default' : 'secondary'}
+                      className={selectedProject.status === 'active' ? 'bg-gradient-to-r from-green-500 to-emerald-500' : ''}
+                    >
+                      {selectedProject.status === 'active' ? 'Активен' : selectedProject.status === 'completed' ? 'Завершен' : 'Планирование'}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground flex items-center">
+                      <Icon name="Building2" className="mr-1 h-4 w-4" />
+                      {selectedProject.client}
+                    </span>
+                  </div>
+                </DialogHeader>
+
+                <Tabs defaultValue="comments" className="flex-1 overflow-hidden flex flex-col">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="comments" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
+                      <Icon name="MessageSquare" className="mr-2 h-4 w-4" />
+                      Комментарии ({projectComments.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="files" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
+                      <Icon name="FileText" className="mr-2 h-4 w-4" />
+                      Файлы ({projectFilesForSelected.length})
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="comments" className="flex-1 overflow-hidden flex flex-col space-y-4 mt-4">
+                    <ScrollArea className="flex-1 pr-4">
+                      <div className="space-y-3">
+                        {projectComments.length === 0 ? (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Icon name="MessageSquare" className="mx-auto h-12 w-12 mb-2 opacity-50" />
+                            <p>Комментариев пока нет</p>
+                          </div>
+                        ) : (
+                          projectComments.map((comment) => (
+                            <div 
+                              key={comment.id} 
+                              className="p-4 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 animate-fade-in group hover:shadow-md transition-all"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <p className="text-sm text-gray-800 mb-2">{comment.text}</p>
+                                  <div className="flex items-center text-xs text-muted-foreground">
+                                    <Icon name="Clock" className="mr-1 h-3 w-3" />
+                                    {new Date(comment.timestamp).toLocaleString('ru-RU')}
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteComment(comment.id)}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600"
+                                >
+                                  <Icon name="Trash2" className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
+
+                    <div className="space-y-2 pt-4 border-t">
+                      <Label htmlFor="new-comment">Новый комментарий</Label>
+                      <div className="flex gap-2">
+                        <Textarea
+                          id="new-comment"
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          placeholder="Введите ваш комментарий..."
+                          className="resize-none"
+                          rows={3}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                              addComment();
+                            }
+                          }}
+                        />
+                      </div>
+                      <Button 
+                        onClick={addComment}
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                        disabled={!newComment.trim()}
+                      >
+                        <Icon name="Send" className="mr-2 h-4 w-4" />
+                        Добавить комментарий
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="files" className="flex-1 overflow-hidden flex flex-col space-y-4 mt-4">
+                    <ScrollArea className="flex-1 pr-4">
+                      <div className="space-y-3">
+                        {projectFilesForSelected.length === 0 ? (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Icon name="FileText" className="mx-auto h-12 w-12 mb-2 opacity-50" />
+                            <p>Файлов пока нет</p>
+                          </div>
+                        ) : (
+                          projectFilesForSelected.map((file) => (
+                            <div 
+                              key={file.id}
+                              className="p-4 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100 animate-fade-in group hover:shadow-md transition-all"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3 flex-1">
+                                  <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white">
+                                    <Icon name="FileText" className="h-6 w-6" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-medium text-sm text-gray-800">{file.name}</p>
+                                    <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                                      <span className="flex items-center">
+                                        <Icon name="HardDrive" className="mr-1 h-3 w-3" />
+                                        {file.size}
+                                      </span>
+                                      <span className="flex items-center">
+                                        <Icon name="Clock" className="mr-1 h-3 w-3" />
+                                        {new Date(file.timestamp).toLocaleString('ru-RU')}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => window.open(file.url, '_blank')}
+                                    className="hover:bg-blue-100"
+                                  >
+                                    <Icon name="Download" className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => deleteFile(file.id)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600"
+                                  >
+                                    <Icon name="Trash2" className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
+
+                    <div className="space-y-2 pt-4 border-t">
+                      <Label htmlFor="file-upload">Загрузить PDF файл</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="file-upload"
+                          type="file"
+                          accept=".pdf"
+                          onChange={handleFileUpload}
+                          className="cursor-pointer"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Поддерживаются только PDF файлы
+                      </p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
