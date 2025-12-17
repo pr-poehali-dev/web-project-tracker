@@ -15,6 +15,7 @@ interface ActiveProjectsTabProps {
   onCreateExpense: (expense: ProjectExpense) => void;
   onAddComment: (projectId: string, text: string) => void;
   onAddFile: (projectId: string, file: File) => void;
+  onDeleteFile: (fileId: string) => void;
   getProjectTotalExpenses: (projectId: string) => number;
   getProjectMargin: (projectId: string) => number;
   getProjectMarginPercent: (projectId: string) => string;
@@ -39,6 +40,7 @@ export default function ActiveProjectsTab({
   onCreateExpense,
   onAddComment,
   onAddFile,
+  onDeleteFile,
   getProjectTotalExpenses,
   getProjectMargin,
   getProjectMarginPercent,
@@ -69,6 +71,7 @@ export default function ActiveProjectsTab({
             onCreateExpense={onCreateExpense}
             onAddComment={onAddComment}
             onAddFile={onAddFile}
+            onDeleteFile={onDeleteFile}
             getProjectTotalExpenses={getProjectTotalExpenses}
             getProjectMargin={getProjectMargin}
             getProjectMarginPercent={getProjectMarginPercent}

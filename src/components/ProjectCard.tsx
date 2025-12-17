@@ -19,6 +19,7 @@ interface ProjectCardProps {
   onCreateExpense: (expense: ProjectExpense) => void;
   onAddComment: (projectId: string, text: string) => void;
   onAddFile: (projectId: string, file: File) => void;
+  onDeleteFile: (fileId: string) => void;
   getProjectTotalExpenses: (projectId: string) => number;
   getProjectMargin: (projectId: string) => number;
   getProjectMarginPercent: (projectId: string) => string;
@@ -37,6 +38,7 @@ export default function ProjectCard({
   onCreateExpense,
   onAddComment,
   onAddFile,
+  onDeleteFile,
   getProjectTotalExpenses,
   getProjectMargin,
   getProjectMarginPercent,
@@ -88,6 +90,7 @@ export default function ProjectCard({
             projectFilesForProject={projectFilesForProject}
             onAddComment={onAddComment}
             onAddFile={onAddFile}
+            onDeleteFile={onDeleteFile}
           />
 
           <div className="space-y-3 pt-4 border-t" onClick={(e) => e.stopPropagation()}>

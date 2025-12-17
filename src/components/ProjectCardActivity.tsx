@@ -13,6 +13,7 @@ interface ProjectCardActivityProps {
   projectFilesForProject: ProjectFile[];
   onAddComment: (projectId: string, text: string) => void;
   onAddFile: (projectId: string, file: File) => void;
+  onDeleteFile: (fileId: string) => void;
 }
 
 export default function ProjectCardActivity({
@@ -21,6 +22,7 @@ export default function ProjectCardActivity({
   projectFilesForProject,
   onAddComment,
   onAddFile,
+  onDeleteFile,
 }: ProjectCardActivityProps) {
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -104,21 +106,34 @@ export default function ProjectCardActivity({
                               </span>
                             </div>
                           </div>
-                          <a
-                            href={item.url}
-                            download={item.name}
-                            className="shrink-0"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <div className="flex items-center gap-1 shrink-0">
+                            <a
+                              href={item.url}
+                              download={item.name}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 hover:bg-green-200 transition-colors"
+                                title="Скачать файл"
+                              >
+                                <Icon name="Download" className="h-4 w-4 text-green-700" />
+                              </Button>
+                            </a>
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-8 w-8 p-0 hover:bg-green-200 transition-colors"
-                              title="Скачать файл"
+                              className="h-8 w-8 p-0 hover:bg-red-200 transition-colors"
+                              title="Удалить файл"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteFile(item.id);
+                              }}
                             >
-                              <Icon name="Download" className="h-4 w-4 text-green-700" />
+                              <Icon name="Trash2" className="h-4 w-4 text-red-700" />
                             </Button>
-                          </a>
+                          </div>
                         </div>
                       </div>
                     )

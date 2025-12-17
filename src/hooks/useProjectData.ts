@@ -310,6 +310,18 @@ export function useProjectData() {
     });
   };
 
+  const deleteFile = (fileId: string) => {
+    const file = projectFiles.find(f => f.id === fileId);
+    if (!file) return;
+
+    setProjectFiles(projectFiles.filter(f => f.id !== fileId));
+
+    toast({
+      title: 'Файл удалён',
+      description: `Файл "${file.name}" удалён из проекта`,
+    });
+  };
+
   const getProjectTotalExpenses = (projectId: string): number => {
     return projectExpenses
       .filter(exp => exp.projectId === projectId)
@@ -466,6 +478,7 @@ export function useProjectData() {
     addCommentToProject,
     addFile,
     addFileToProject,
+    deleteFile,
     getProjectTotalExpenses,
     getProjectMargin,
     getProjectMarginPercent,
