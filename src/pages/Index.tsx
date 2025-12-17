@@ -306,13 +306,6 @@ export default function Index() {
     return project.totalCost > 0 ? ((margin / project.totalCost) * 100).toFixed(1) : '0';
   };
 
-  const calculateEndDate = (startDate: string, duration: number): string => {
-    const start = new Date(startDate);
-    const end = new Date(start);
-    end.setDate(end.getDate() + duration);
-    return end.toISOString().split('T')[0];
-  };
-
   const createNewProject = (projectData: {
     name: string;
     client: string;
