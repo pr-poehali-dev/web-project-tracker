@@ -203,7 +203,7 @@ export default function Index() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[600px] mx-auto">
+          <TabsList className="grid w-full grid-cols-2 lg:w-[400px] mx-auto">
             <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
               <Icon name="LayoutDashboard" className="mr-2 h-4 w-4" />
               Обзор
@@ -211,10 +211,6 @@ export default function Index() {
             <TabsTrigger value="clients" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
               <Icon name="Users" className="mr-2 h-4 w-4" />
               Клиенты
-            </TabsTrigger>
-            <TabsTrigger value="calculator" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
-              <Icon name="Calculator" className="mr-2 h-4 w-4" />
-              Калькулятор
             </TabsTrigger>
           </TabsList>
 
@@ -281,13 +277,6 @@ export default function Index() {
             </div>
           </TabsContent>
 
-          <TabsContent value="calculator" className="mt-6">
-            <p className="text-center text-muted-foreground py-8">
-              Калькулятор маржи теперь доступен в каждом проекте отдельно.
-              <br />
-              Откройте проект для расчёта затрат и маржинальности.
-            </p>
-          </TabsContent>
         </Tabs>
       </div>
 
