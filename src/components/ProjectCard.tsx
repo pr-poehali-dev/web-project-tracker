@@ -4,13 +4,17 @@ import Icon from '@/components/ui/icon';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Project, ProjectStatus, PROJECT_STATUSES, ProjectExpense } from '@/types/project';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Project, ProjectStatus, PROJECT_STATUSES, ProjectExpense, EXPENSE_CATEGORIES } from '@/types/project';
 
 interface ProjectCardProps {
   project: Project;
   projectExpenses: ProjectExpense[];
   onOpenDetails: (project: Project) => void;
   onUpdateStatus: (projectId: string, status: ProjectStatus) => void;
+  onUpdateExpense: (expenseId: string, amount: number) => void;
+  onCreateExpense: (expense: ProjectExpense) => void;
   getProjectTotalExpenses: (projectId: string) => number;
   getProjectMargin: (projectId: string) => number;
   getProjectMarginPercent: (projectId: string) => string;
@@ -21,6 +25,8 @@ export default function ProjectCard({
   projectExpenses,
   onOpenDetails, 
   onUpdateStatus,
+  onUpdateExpense,
+  onCreateExpense,
   getProjectTotalExpenses,
   getProjectMargin,
   getProjectMarginPercent
@@ -29,11 +35,11 @@ export default function ProjectCard({
   const totalExpenses = getProjectTotalExpenses(project.id);
   const margin = getProjectMargin(project.id);
   const marginPercent = getProjectMarginPercent(project.id);
+  const currentProjectExpenses = projectExpenses.filter(e => e.projectId === project.id);
 
   return (
     <Card 
-      className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-purple-300 cursor-pointer animate-fade-in overflow-hidden bg-gradient-to-br from-white to-purple-50/30"
-      onClick={() => onOpenDetails(project)}
+      className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-purple-300 animate-fade-in overflow-hidden bg-gradient-to-br from-white to-purple-50/30"
     >
       <div className={`h-2 ${statusInfo.color}`}></div>
       <CardHeader>
@@ -81,7 +87,7 @@ export default function ProjectCard({
         <div className="pt-4 border-t space-y-3">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="p-3 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100">
-              <p className="text-xs text-muted-foreground mb-1">Стоимость</p>
+              <p className="text-xs text-muted-foreground mb-1">Бюджет</p>
               <p className="font-bold text-blue-700">{project.totalCost.toLocaleString('ru-RU')} ₽</p>
             </div>
             <div className="p-3 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100">
@@ -101,7 +107,59 @@ export default function ProjectCard({
           </div>
         </div>
 
-        <div className="space-y-2 pt-2" onClick={(e) => e.stopPropagation()}>
+        <div className="pt-4 border-t space-y-3">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Icon name="DollarSign" className="h-4 w-4 text-purple-600" />
+              Категории затрат
+            </h3>
+          </div>
+          
+          <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+            {EXPENSE_CATEGORIES.map((category) => {
+              const expense = currentProjectExpenses.find(e => e.category === category);
+              const expenseId = expense?.id || '';
+              const amount = expense?.amount || 0;
+              
+              return (
+                <div 
+                  key={category}
+                  className="p-2 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-gray-700">{category}</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => {
+                          const newAmount = parseFloat(e.target.value) || 0;
+                          if (expense) {
+                            onUpdateExpense(expenseId, newAmount);
+                          } else {
+                            const newExpense: ProjectExpense = {
+                              id: Date.now().toString() + Math.random(),
+                              projectId: project.id,
+                              category,
+                              amount: newAmount,
+                            };
+                            onCreateExpense(newExpense);
+                          }
+                        }}
+                        className="h-8 text-sm bg-white border-2 focus:border-purple-500"
+                        placeholder="0"
+                      />
+                      <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">₽</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-2 pt-2 border-t" onClick={(e) => e.stopPropagation()}>
           <label className="text-sm font-medium">Изменить статус</label>
           <Select
             value={project.status}

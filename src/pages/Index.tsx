@@ -236,6 +236,8 @@ export default function Index() {
                   projectExpenses={projectExpenses}
                   onOpenDetails={openProjectDetails}
                   onUpdateStatus={updateProjectStatus}
+                  onUpdateExpense={updateExpenseAmount}
+                  onCreateExpense={(expense) => setProjectExpenses([...projectExpenses, expense])}
                   getProjectTotalExpenses={getProjectTotalExpenses}
                   getProjectMargin={getProjectMargin}
                   getProjectMarginPercent={getProjectMarginPercent}
