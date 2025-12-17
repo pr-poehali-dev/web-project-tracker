@@ -58,7 +58,7 @@ export default function ProjectDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-r from-purple-50 to-pink-50">
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             {selectedProject.name}
@@ -69,93 +69,90 @@ export default function ProjectDialog({
           </p>
         </DialogHeader>
 
-        <div className="px-6 py-4 space-y-4">
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="project-name" className="text-sm font-medium flex items-center">
-                  <Icon name="FileText" className="mr-1 h-3 w-3" />
-                  Название проекта
-                </Label>
-                <Input
-                  id="project-name"
-                  value={editingProject?.name || ''}
-                  onChange={(e) => updateProject('name', e.target.value)}
-                  className="bg-white border-2 focus:border-purple-500"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="start-date" className="text-sm font-medium flex items-center">
-                  <Icon name="Calendar" className="mr-1 h-3 w-3" />
-                  Дата начала
-                </Label>
-                <Input
-                  id="start-date"
-                  type="date"
-                  value={editingProject?.startDate || ''}
-                  onChange={(e) => updateProject('startDate', e.target.value)}
-                  className="bg-white border-2 focus:border-purple-500"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="duration" className="text-sm font-medium flex items-center">
-                  <Icon name="Clock" className="mr-1 h-3 w-3" />
-                  Длительность (дней)
-                </Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  min="1"
-                  value={editingProject?.duration || ''}
-                  onChange={(e) => updateProject('duration', e.target.value)}
-                  className="bg-white border-2 focus:border-purple-500"
-                />
-              </div>
+        <div className="px-6 py-4 space-y-4 border-b">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="project-name" className="text-sm font-medium flex items-center">
+                <Icon name="FileText" className="mr-1 h-3 w-3" />
+                Название проекта
+              </Label>
+              <Input
+                id="project-name"
+                value={editingProject?.name || ''}
+                onChange={(e) => updateProject('name', e.target.value)}
+                className="bg-white border-2 focus:border-purple-500"
+              />
             </div>
             
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-purple-200">
-                <div className="flex items-center gap-2 text-sm">
-                  <Icon name="CalendarCheck" className="h-4 w-4 text-green-600" />
-                  <span className="font-medium">Дата окончания:</span>
-                </div>
-                <span className="text-sm font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                  {editingProject && new Date(calculateEndDate(editingProject.startDate, editingProject.duration)).toLocaleDateString('ru-RU')}
+            <div className="space-y-2">
+              <Label htmlFor="start-date" className="text-sm font-medium flex items-center">
+                <Icon name="Calendar" className="mr-1 h-3 w-3" />
+                Дата начала
+              </Label>
+              <Input
+                id="start-date"
+                type="date"
+                value={editingProject?.startDate || ''}
+                onChange={(e) => updateProject('startDate', e.target.value)}
+                className="bg-white border-2 focus:border-purple-500"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="duration" className="text-sm font-medium flex items-center">
+                <Icon name="Clock" className="mr-1 h-3 w-3" />
+                Длительность (дней)
+              </Label>
+              <Input
+                id="duration"
+                type="number"
+                min="1"
+                value={editingProject?.duration || ''}
+                onChange={(e) => updateProject('duration', e.target.value)}
+                className="bg-white border-2 focus:border-purple-500"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-purple-200">
+              <div className="flex items-center gap-2 text-sm">
+                <Icon name="CalendarCheck" className="h-4 w-4 text-green-600" />
+                <span className="font-medium">Дата окончания:</span>
+              </div>
+              <span className="text-sm font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                {editingProject && new Date(calculateEndDate(editingProject.startDate, editingProject.duration)).toLocaleDateString('ru-RU')}
+              </span>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-muted-foreground">Прогресс выполнения</span>
+                <span className="font-bold text-purple-700">
+                  {PROJECT_STATUSES[selectedProject.status].progress}%
                 </span>
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-muted-foreground">Прогресс выполнения</span>
-                  <span className="font-bold text-purple-700">
-                    {PROJECT_STATUSES[selectedProject.status].progress}%
-                  </span>
-                </div>
-                <Progress 
-                  value={PROJECT_STATUSES[selectedProject.status].progress} 
-                  className="h-3"
-                />
-              </div>
+              <Progress 
+                value={PROJECT_STATUSES[selectedProject.status].progress} 
+                className="h-3"
+              />
             </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden flex flex-col px-6">
-          <Tabs defaultValue="expenses" className="flex-1 overflow-hidden flex flex-col">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="expenses" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
-                <Icon name="DollarSign" className="mr-2 h-4 w-4" />
-                Затраты ({currentProjectExpenses.length})
-              </TabsTrigger>
-              <TabsTrigger value="activity" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
-                <Icon name="Activity" className="mr-2 h-4 w-4" />
-                Активность ({projectComments.length + projectFilesForSelected.length})
-              </TabsTrigger>
-            </TabsList>
+        <Tabs defaultValue="expenses" className="px-6 pb-4 flex-1 flex flex-col">
+          <TabsList className="grid w-full grid-cols-2 mt-0">
+            <TabsTrigger value="expenses" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
+              <Icon name="DollarSign" className="mr-2 h-4 w-4" />
+              Затраты ({currentProjectExpenses.length})
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
+              <Icon name="Activity" className="mr-2 h-4 w-4" />
+              Активность ({projectComments.length + projectFilesForSelected.length})
+            </TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="expenses" className="flex-1 overflow-hidden flex flex-col space-y-4 mt-4">
+          <TabsContent value="expenses" className="flex-1 overflow-y-auto space-y-4 mt-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground mb-1">Стоимость проекта</p>
@@ -225,8 +222,8 @@ export default function ProjectDialog({
               </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="activity" className="flex-1 overflow-hidden flex flex-col space-y-4 mt-4">
-              <ScrollArea className="flex-1 pr-4">
+          <TabsContent value="activity" className="flex-1 overflow-y-auto space-y-4 mt-4">
+            <ScrollArea className="flex-1 pr-4">
                 <div className="space-y-3">
                   {projectComments.length === 0 && projectFilesForSelected.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
@@ -305,9 +302,9 @@ export default function ProjectDialog({
                       ))
                   )}
                 </div>
-              </ScrollArea>
+            </ScrollArea>
 
-              <div className="space-y-3 pt-4 border-t">
+            <div className="space-y-3 pt-4 border-t">
                 <div className="space-y-2">
                   <Label htmlFor="new-comment">Добавить комментарий</Label>
                   <div className="flex gap-2">
@@ -354,10 +351,9 @@ export default function ProjectDialog({
                   </div>
                   <p className="text-xs text-muted-foreground">Поддерживаются только PDF файлы</p>
                 </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
