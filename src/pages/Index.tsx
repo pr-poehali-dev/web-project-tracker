@@ -155,7 +155,7 @@ export default function Index() {
     });
   };
 
-  const updateProjectInCard = (projectId: string, field: 'name' | 'startDate' | 'duration', value: string | number) => {
+  const updateProjectInCard = (projectId: string, field: 'name' | 'startDate' | 'duration' | 'totalCost', value: string | number) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
 
@@ -167,6 +167,7 @@ export default function Index() {
       name: project.name,
       startDate: project.startDate,
       duration: project.duration || currentDuration,
+      totalCost: project.totalCost,
     };
 
     if (field === 'name') {
@@ -175,13 +176,15 @@ export default function Index() {
       updated.startDate = value as string;
     } else if (field === 'duration') {
       updated.duration = parseInt(value as string) || 0;
+    } else if (field === 'totalCost') {
+      updated.totalCost = parseInt(value as string) || 0;
     }
 
     const endDate = calculateEndDate(updated.startDate, updated.duration);
 
     setProjects(projects.map(p => 
       p.id === projectId
-        ? { ...p, name: updated.name, startDate: updated.startDate, endDate, duration: updated.duration }
+        ? { ...p, name: updated.name, startDate: updated.startDate, endDate, duration: updated.duration, totalCost: updated.totalCost }
         : p
     ));
 

@@ -17,7 +17,7 @@ interface ProjectCardProps {
   comments: Comment[];
   projectFiles: ProjectFile[];
   onUpdateStatus: (projectId: string, status: ProjectStatus) => void;
-  onUpdateProject: (projectId: string, field: 'name' | 'startDate' | 'duration', value: string | number) => void;
+  onUpdateProject: (projectId: string, field: 'name' | 'startDate' | 'duration' | 'totalCost', value: string | number) => void;
   onUpdateExpense: (expenseId: string, amount: number) => void;
   onCreateExpense: (expense: ProjectExpense) => void;
   onAddComment: (projectId: string, text: string) => void;
@@ -48,6 +48,8 @@ export default function ProjectCard({
   const [newComment, setNewComment] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(project.name);
+  const [isEditingBudget, setIsEditingBudget] = useState(false);
+  const [editedBudget, setEditedBudget] = useState(project.totalCost.toString());
   
   const statusInfo = PROJECT_STATUSES[project.status];
   const totalExpenses = getProjectTotalExpenses(project.id);
@@ -172,10 +174,45 @@ export default function ProjectCard({
         </div>
 
         <div className="pt-4 border-t space-y-3">
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-2 gap-3 text-sm" onClick={(e) => e.stopPropagation()}>
             <div className="p-3 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100">
               <p className="text-xs text-muted-foreground mb-1">Бюджет</p>
-              <p className="font-bold text-blue-700">{project.totalCost.toLocaleString('ru-RU')} ₽</p>
+              {isEditingBudget ? (
+                <Input
+                  type="number"
+                  min="0"
+                  value={editedBudget}
+                  onChange={(e) => setEditedBudget(e.target.value)}
+                  onBlur={() => {
+                    const newBudget = parseInt(editedBudget) || 0;
+                    if (newBudget !== project.totalCost) {
+                      onUpdateProject(project.id, 'totalCost', newBudget);
+                    }
+                    setIsEditingBudget(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const newBudget = parseInt(editedBudget) || 0;
+                      if (newBudget !== project.totalCost) {
+                        onUpdateProject(project.id, 'totalCost', newBudget);
+                      }
+                      setIsEditingBudget(false);
+                    } else if (e.key === 'Escape') {
+                      setEditedBudget(project.totalCost.toString());
+                      setIsEditingBudget(false);
+                    }
+                  }}
+                  className="h-7 text-sm font-bold text-blue-700 bg-white"
+                  autoFocus
+                />
+              ) : (
+                <p 
+                  className="font-bold text-blue-700 cursor-pointer hover:bg-blue-200 rounded px-1 -mx-1 transition-colors"
+                  onClick={() => setIsEditingBudget(true)}
+                >
+                  {project.totalCost.toLocaleString('ru-RU')} ₽
+                </p>
+              )}
             </div>
             <div className="p-3 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100">
               <p className="text-xs text-muted-foreground mb-1">Затраты</p>
