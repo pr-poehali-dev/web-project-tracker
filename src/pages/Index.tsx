@@ -9,6 +9,7 @@ import StatsCards from '@/components/StatsCards';
 import ProjectCard from '@/components/ProjectCard';
 import ProjectDialog from '@/components/ProjectDialog';
 import NewProjectForm from '@/components/NewProjectForm';
+import DeletedProjectCard from '@/components/DeletedProjectCard';
 
 export default function Index() {
   const [projects, setProjects] = useState<Project[]>([
@@ -360,6 +361,23 @@ export default function Index() {
     });
   };
 
+  const permanentlyDeleteProject = (projectId: string) => {
+    const project = deletedProjects.find(p => p.id === projectId);
+    if (!project) return;
+
+    setDeletedProjects(deletedProjects.filter(p => p.id !== projectId));
+    
+    setProjectExpenses(projectExpenses.filter(e => e.projectId !== projectId));
+    setComments(comments.filter(c => c.projectId !== projectId));
+    setProjectFiles(projectFiles.filter(f => f.projectId !== projectId));
+
+    toast({
+      title: 'Проект удалён навсегда',
+      description: `Проект "${project.name}" окончательно удалён`,
+      variant: 'destructive',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
       <div className="container mx-auto py-8 px-4">
@@ -472,48 +490,12 @@ export default function Index() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {deletedProjects.map((project) => (
-                <Card 
+                <DeletedProjectCard
                   key={project.id}
-                  className="group hover:shadow-xl transition-all duration-300 border-2 border-red-200 animate-fade-in overflow-hidden bg-gradient-to-br from-white to-red-50/30"
-                >
-                  <div className="h-2 bg-gradient-to-r from-red-500 to-orange-500"></div>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-xl mb-2 text-red-700 truncate">
-                          {project.name}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground flex items-center gap-2">
-                          <Icon name="Building2" className="h-4 w-4" />
-                          {project.client}
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => restoreProject(project.id)}
-                        className="shrink-0 border-green-300 text-green-700 hover:bg-green-50"
-                      >
-                        <Icon name="RotateCcw" className="mr-2 h-4 w-4" />
-                        Восстановить
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div className="p-3 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100">
-                        <p className="text-xs text-muted-foreground mb-1">Бюджет</p>
-                        <p className="font-bold text-blue-700">{project.totalCost.toLocaleString('ru-RU')} ₽</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100">
-                        <p className="text-xs text-muted-foreground mb-1">Период</p>
-                        <p className="font-bold text-gray-700 text-xs">
-                          {new Date(project.startDate).toLocaleDateString('ru-RU')} - {new Date(project.endDate).toLocaleDateString('ru-RU')}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                  project={project}
+                  onRestore={restoreProject}
+                  onPermanentDelete={permanentlyDeleteProject}
+                />
               ))}
             </div>
           </TabsContent>
