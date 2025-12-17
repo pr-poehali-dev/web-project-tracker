@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import ProjectDialog from '@/components/ProjectDialog';
 import OverviewTab from '@/components/OverviewTab';
+import ActiveProjectsTab from '@/components/ActiveProjectsTab';
 import ClientsTab from '@/components/ClientsTab';
 import DeletedTab from '@/components/DeletedTab';
 import { useProjectData } from '@/hooks/useProjectData';
@@ -50,10 +51,14 @@ export default function Index() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[600px] mx-auto">
+          <TabsList className="grid w-full grid-cols-4 lg:w-[800px] mx-auto">
             <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
               <Icon name="LayoutDashboard" className="mr-2 h-4 w-4" />
               Обзор
+            </TabsTrigger>
+            <TabsTrigger value="active-projects" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
+              <Icon name="FolderKanban" className="mr-2 h-4 w-4" />
+              Активные проекты
             </TabsTrigger>
             <TabsTrigger value="clients" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
               <Icon name="Users" className="mr-2 h-4 w-4" />
@@ -69,6 +74,13 @@ export default function Index() {
             <OverviewTab
               projects={projects}
               clients={clients}
+              projectExpenses={projectExpenses}
+            />
+          </TabsContent>
+
+          <TabsContent value="active-projects" className="mt-6">
+            <ActiveProjectsTab
+              projects={projects}
               projectExpenses={projectExpenses}
               comments={comments}
               projectFiles={projectFiles}
