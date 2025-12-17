@@ -104,6 +104,21 @@ export default function ProjectCardActivity({
                               </span>
                             </div>
                           </div>
+                          <a
+                            href={item.url}
+                            download={item.name}
+                            className="shrink-0"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 hover:bg-green-200 transition-colors"
+                              title="Скачать файл"
+                            >
+                              <Icon name="Download" className="h-4 w-4 text-green-700" />
+                            </Button>
+                          </a>
                         </div>
                       </div>
                     )
